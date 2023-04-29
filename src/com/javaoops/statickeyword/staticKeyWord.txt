@@ -1,0 +1,41 @@
+static :
+static keyword is used to declare a variable which can be referred as common for all the objects
+the memory will be created only once during class loading
+
+
+we can use static variables everywhere (with in nonstatic blocks as well) but we cannot use non-static variables/methods inside a static blocks
+static variables are created in the heap area when the class loader loads the class , that's why we won't be able to use non-static variables inside
+static blocks/methods because at the time of class loading the memory has not been given for non-static members.
+
+static block :
+static block will be loaded while class loader loads the class
+the purpose of static blocks is to initialize the static variables
+if there are any lines to be executed during class loading then those can be given in static blocks
+
+ex :
+static {
+        System.out.println("in static block");
+        a=10;
+        b=20;
+        c=30;
+}
+
+
+Non-static block :
+non-static block will be executed during object creation before invoking the constructor
+if some common copy of code is there and to be executed for all the constructors then we can make use of non-static block
+
+if there are more the one static/non-static blocks then the execution will be done in the sequence of order.
+
+
+static/class variable                                                        instance/non-static variable
+
+1.can be accessed directly with class name                          1. object needs to be created to access
+if it is not private
+
+2.memory will be allocated once during                              2. each time the object is created the memory
+class loading time                                                     will be allocated for that object
+
+3.need to be used when the copy of the variable                     3.need to be used when each object requires
+is required for all the objects                                       different values
+

@@ -20,7 +20,9 @@ public class Basics {
 //        double a = 10;
 //        byte b = (byte) a;
 
-
+//
+//        char a = 0;
+//        System.out.println(a); //0
 
 
 

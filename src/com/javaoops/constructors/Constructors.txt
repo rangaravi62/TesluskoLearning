@@ -1,0 +1,29 @@
+Constructor :
+constructor is a specialized setter which has the class name.it doesn't have any return type
+a constructor gets invoked during the creation of an object
+
+by default jvm will include a default constructor in all the classes
+if we use any parametrized contructors then jvm will not include default contructor we need to manually include
+
+by default behind the scenes every constructor will have super() method in the first line
+super() :
+super method is used to call parent class constructor
+
+ex :
+public Constructor1(int age,String name ){
+        super();
+        this.age = age;
+        this.name = name;
+}
+
+this() :
+this() method is used to call the current class constructor
+this() method should be declared in the first line of the constuctor this is mandatory if we want to use
+and this() method can only be used in the constructors
+
+ex :
+public ThisAndSuper(int a, int b) {
+        this(a,b,10); // calling a parametrized constructor which takes in three args from a 2 arg constructor
+        this.a = a;
+        this.b = b;
+}

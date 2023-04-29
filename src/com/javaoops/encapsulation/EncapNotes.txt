@@ -1,0 +1,29 @@
+Encapsulation :
+providing security to the most important component of the object by giving controlled access on it
+we can acheive this by making the variables private and restricting the access to the other classes
+other classes can only access them through getters and setters.
+
+ex:
+
+public class Books1 {
+    private int pgNo;
+
+    public int getPgNo() {
+        return pgNo;
+    }
+
+    public void setPgNo(int pgNo) {
+        if(!(pgNo < 0)){
+            this.pgNo = pgNo;
+        }else {
+            System.out.println("pgNo cannot be in negative you dumb!");
+        }
+
+    }
+
+}
+
+this keyword :
+
+we use 'this' keyword to differentiate instance variable and the value passed in a setter or in a constructor
+'this' keyword holds the reference of currently running object

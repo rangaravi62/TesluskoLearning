@@ -67,10 +67,39 @@ double a = 10;
 byte b = a;
 error: this throws error because we are assigning a bigger data type value to a lesser data type , to acheive this we should use explicit type cating
 
-explixit type casting :
+explicit type casting :
 double a = 10;
 byte b = (byte)a;
 here we are forcefully converting , works fine
+
+Different Kinds of cases we use in java :
+
+1.methods ---> getAge() -> CAMEL CASE
+2.variables --> boysAge -> CAMEL CASE
+3.class name --> DiffAges -> PASCAL CASE
+4.db variable names --> boys_age -> SNAKE CASE
+
+
+Operators in java :
+
+1.Arithmetic Operators :
+ Addition -> + , Substraction -> -, Multiplication - > *, division -> /, modulus -> %
+
+2.Relational Operators :
+ >,<,>=,<=,==,!=
+
+3.Logical Operators :
+&&,||,!
+
+4.Bitwise Operators :
+&,|,^
+
+5.Increment and Decrement Operators :
+ a++ -> first assign the value and increment
+ ++a -> first increment the value and assign
+ lly --a and a++
+
+
 
 
 
