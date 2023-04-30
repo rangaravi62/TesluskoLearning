@@ -57,6 +57,14 @@ class Square extends Shapes{
         area = len * len;
     }
 }
+
+class Geometry{
+    void permit(Shapes s){
+        s.input();
+        s.compute();
+        s.display();
+    }
+}
 class Test {
     public static void main(String[] args) {
 //        Rectangle rec = new Rectangle();
@@ -68,11 +76,18 @@ class Test {
 //        rec.input();
 //        rec.compute();
 //        rec.display();
+//
+//        Square rec = new Square();
+//        rec.input();
+//        rec.compute();
+//        rec.display();
 
-        Square rec = new Square();
-        rec.input();
-        rec.compute();
-        rec.display();
+        Geometry g = new Geometry();
+        g.permit(new Rectangle());
+        g.permit(new Square());
+        g.permit(new Circle());
+
+
     }
 
 }
