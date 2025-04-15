@@ -1,0 +1,12 @@
+Enums are classes that have a fixed set of constants.
+
+we can define an enum either inside the class or outside the class.
+
+Java enum internally inherits the Enum class, so it cannot inherit any other class, but it can implement many interfaces.
+We can have fields, constructors, methods, and main() methods in Java enum.
+
+Note: Constructor of enum type is private(by default). If we do not declare private compiler internally creates private constructor.
+We cannot create instance of an Enum, because it contains private constructors only.
+
+
+

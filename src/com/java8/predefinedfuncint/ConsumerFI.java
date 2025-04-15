@@ -5,7 +5,7 @@ import java.time.Period;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-public class ConsumerFI {
+public class  ConsumerFI {
     public static void main(String[] args) {
         Consumer<Integer> consumer = i -> System.out.println(i);
         int arr[]={1,2,3,4,5,6};

@@ -1,0 +1,24 @@
+
+Advantages of Reflection in Java :
+
+Reflection allows you to create and manipulate objects, invoke methods, and access fields dynamically at runtime
+
+
+You can inspect class metadata (e.g., methods, fields, constructors, annotations) at runtime.
+
+Useful for debugging tools, testing frameworks (like JUnit), and serialization libraries.
+
+
+Many frameworks (e.g., Spring, Hibernate) use reflection to dynamically inject dependencies, map objects to database tables, or bind request parameters to objects.
+
+
+Reflection can access private fields or methods (using setAccessible(true)), enabling advanced techniques for testing or working around constraints.
+
+
+
+Disadvantages of Reflection in Java :
+
+Reflection violates the principle of encapsulation by exposing private fields and methods, which could lead to unintended side effects.
+
+Reflection is more prone to runtime errors (e.g., ClassNotFoundException, NoSuchMethodException, IllegalAccessException) since it relies on the runtime state of the application.
+

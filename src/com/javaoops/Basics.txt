@@ -1,0 +1,4 @@
+OOPs (Object-Oriented Programming)
+
+
+Object means a real-world entity such as a pen, chair, table, computer, watch, etc.

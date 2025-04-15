@@ -8,7 +8,7 @@ public class Demo {
         b=20;
         c=30;
     }
-    static void disp(){
+    static void disp() {
         System.out.println("in static method disp");
         System.out.println("a : "+a+" b : "+b+" c : "+c);
     }

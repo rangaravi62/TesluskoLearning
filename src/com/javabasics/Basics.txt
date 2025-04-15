@@ -1,4 +1,4 @@
-computer can only understand 0's and 1's -> 0,1 binary/machine level language (MLL)
+Computer can only understand 0's and 1's -> 0,1 binary/machine level language (MLL)
 High level language(HLL) -> it is a english like language (+,-,printf,print,scan etc) -> this will be compiled using compiler which will convert HLL into MLL and executed by cpu
 Assembly level language(ALL) -> (ADD,SUB,MUL,MOV) like 8085, 8081 etc -> this will be passed through an assembler to convert it into MLL
 
@@ -92,12 +92,78 @@ Operators in java :
 &&,||,!
 
 4.Bitwise Operators :
-&,|,^
+&,|,^,~,<<,>>
 
 5.Increment and Decrement Operators :
  a++ -> first assign the value and increment
  ++a -> first increment the value and assign
  lly --a and a++
+
+
+
+ Loops -----------
+
+
+ for loop :
+
+ If the number of iteration is fixed, it is recommended to use for loop.
+
+ while loop :
+
+ If the number of iteration is not fixed, it is recommended to use while loop.
+
+ do-while loop :
+
+ If the number of iteration is not fixed and you must have to execute the loop at least once, it is recommended to use the do-while loop.
+
+
+
+
+  aa: for(int i=1;i<=3;i++){
+             bb: for(int j=1;j<=3;j++) {
+                     if(i==2&&j==2) {
+                         break aa;
+                     }
+                 System.out.println(i+" "+j);
+             }
+  }
+
+
+  We can use labels to break out or to continue.
+
+
+
+
+  Comments in java ------------------
+
+
+  single line comment :
+
+  // this is a single line comment
+
+  multi line comment :
+
+    /* this is a multi
+     line comment */
+
+  documentation comments :
+
+  To create documentation API, we need to use the javadoc tool. The documentation comments are placed between /** and */.
+
+
+  /**
+  *
+  *We can use various tags to depict the parameter
+  *or heading or author name
+  *We can also use HTML tags
+  *
+  */
+
+
+
+
+
+
 
 
 

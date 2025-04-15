@@ -1,6 +1,5 @@
 package com.javaoops.constructors;
 
-import com.javaoops.encapsulation.ThisKeyword;
 
 public class ThisAndSuper {
     int a;
