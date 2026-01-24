@@ -42,12 +42,10 @@ class AndnOr {
         Predicate<Integer> predicate2 = st -> st > 3;
 
         Integer x[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-        for (
-                int i : x) {
+        for (int i : x) {
             if (predicate1.and(predicate2).test(i)) {
                 System.out.println(i);
             }
-
         }
     }
 }

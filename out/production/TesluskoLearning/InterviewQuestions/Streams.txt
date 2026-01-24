@@ -1,0 +1,165 @@
+-> What are streams?
+Streams are used to processing sequences of data
+this is achieved using functional style programming
+
+Advantages :
+readable and code concise
+parallel processing
+function chaining
+functional programming
+Lazy evolution
+
+------------------------------------------------------------------------------------------------------------------------
+
+-> What are intermediate operations in streams?
+
+Intermediate operations are those which transforms a stream into another stream
+We can chain n number of intermediate operations
+these operations won't get executed until a terminal operation is called, this is called lazy loading
+
+ex : filter, map, sorted, skip, limit, distinct, flatMap, peek
+
+------------------------------------------------------------------------------------------------------------------------
+
+-> What are terminal operations in streams?
+
+Terminal operations are the final operations performed on a stream, these operations returns a result or a side effect
+After terminal operation is called, stream is consumed and can't be used again
+these operations are eager
+
+ex : forEach, collect, reduce, count, anyMatch, allMatch, noneMatch, findFirst, findAny, toArray
+
+------------------------------------------------------------------------------------------------------------------------
+
+-> Comparator methods
+
+comparing() : this is a static method in Comparator interface, it returns a comparator which compares the objects based on the given function
+ex : comparing(Employee::getSalary)
+
+comparingDouble() : this is a static method in Comparator interface, it returns a comparator which compares the objects based on the given function
+ex : comparingDouble(Employee::getSalary)
+
+comparingInt() : this is a static method in Comparator interface, it returns a comparator which compares the objects based on the given function
+ex : comparingInt(Employee::getSalary)
+
+comparingLong() : this is a static method in Comparator interface, it returns a comparator which compares the objects based on the given function
+ex : comparingLong(Employee::getSalary)
+
+naturalOrder() : this is a static method in Comparator interface, it returns a comparator which compares the objects based on their natural order
+ex : naturalOrder()
+
+reverseOrder() : this is a static method in Comparator interface, it returns a comparator which compares the objects based on their reverse order
+ex : reverseOrder()
+
+------------------------------------------------------------------------------------------------------------------------
+
+-> Are streams are immutable?
+Yes, streams are immutable
+Streams allow data to be processed without modifying the original data source.
+every operation on a stream produces a new stream
+
+------------------------------------------------------------------------------------------------------------------------
+
+-> can we use collect() method twice on a stream?
+
+No, we can't use collect() method twice on a stream
+once the stream is terminated it can't be used again, if we try to do that it throws IllegalStateException
+
+------------------------------------------------------------------------------------------------------------------------
+
+-> for loop vs streams
+
+for loop :
+
+use for loop when you need precise control over the iteration process.
+when performance is a critical concern for small collections
+when you need to break or continue the loop based on certain conditions.
+
+streams :
+
+when working with large datasets and achieve parallel processing
+when you want to write concise and readable code.
+
+
+------------------------------------------------------------------------------------------------------------------------
+
+-> sequential processing vs parallel processing
+
+sequential processing :
+
+A sequential stream processes elements one at a time in a single thread.
+it is executed in single thread in a single cpu core
+It's suitable for small to medium-sized datasets and when you need precise control over the iteration process.
+
+parallel processing :
+
+A parallel stream divides the data into multiple parts and processes them concurrently using multiple threads.
+It's executed in multiple threads in multiple cpu cores
+It's suitable for large datasets and when you want to take advantage of multi-core processors for faster processing.
+
+------------------------------------------------------------------------------------------------------------------------
+
+-> Collector Methods
+
+toList() : this method returns a collector which collects the elements into a list
+
+toSet() : this method returns a collector which collects the elements into a set
+
+toMap() : this method returns a collector which collects the elements into a map
+
+joining() : this method returns a collector which concatenates the elements into a string
+
+groupingBy() : this method returns a collector which groups the elements based on the given function
+
+summingInt() : this method returns a collector which sums the elements based on the given function
+
+averagingInt() : this method returns a collector which averages the elements based on the given function
+
+averagingDouble() : this method returns a collector which averages the elements based on the given function
+
+counting() : this method returns a collector which counts the number of elements
+
+------------------------------------------------------------------------------------------------------------------------
+
+-> groupingBy() vs partitioningBy()
+
+groupingBy() : this method returns a collector which groups the elements based on the given function
+groups elements based on a key
+
+groupingBy may produce many groups
+
+output type : Map<K, List<T>>
+K = key (grouping condition)
+T = element from the stream
+
+ex :
+Map<String, List<Student>> map =
+         students.stream()
+                 .collect(Collectors.groupingBy(Student::getDepartment));
+
+Map<String, Long> countMap =
+    students.stream()
+            .collect(Collectors.groupingBy(
+                Student::getDepartment,
+                Collectors.counting()
+            ));
+
+
+partitioningBy() : splits elements into TRUE group and FALSE group
+
+output type : Map<Boolean, List<T>>
+T = element from the stream
+
+partitioningBy ALWAYS produces two groups
+
+ex :
+Map<Boolean, List<Student>> map =
+    students.stream()
+            .collect(Collectors.partitioningBy(
+                student -> student.getGpa() >= 3.0
+            ));
+
+
+
+
+

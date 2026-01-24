@@ -1,0 +1,343 @@
+                                              ITERABLE
+                                                 |
+                                                 | E
+                                                 |
+                                             COLLECTION
+                                                 | E
+                                          _______|______
+                               E         |     E |      |        E
+               LIST    ------------------|     QUEUE    |---------------------------- SET
+                 |                               |---------------                      |        I
+                 |  I                          E |              |                      |------------------- HashSet
+                 |----- ArrayList     |------- DEQUEUE        I |                      |                       |
+                 |                    |          |              |                      |                       | E
+                 |  I               I |        I |         PriorityQueue               | E                     |
+                 |----- LinkedList----|      ArrayDeque                                |                 LinkedHashSet
+                 |                                                                     |
+                 |  I                                                              SORTEDSET
+                 |----- Vector                                                         |
+                          |                                                            | I
+                          | E                                                          |
+                          |                                                         TreeSet
+                        Stack
+
+
+
+
+         INTERFACE -> IN UPPER CASE
+         CLASS     -> IN PASCAL CASE
+         I -> IMPLEMENTS
+         E -> EXTENDS
+
+
+
+
+ ---------- ITERATOR INTERFACE -------------
+
+ For iterating the elements of a collection.
+
+ it has 3 methods :
+  hasNext() -> returns true if there is next element
+  next() -> returns the next element
+  remove() -> removes the last element returned by the iterator
+
+
+          ArrayList<String> list = new ArrayList<>();
+          list.add("A");
+          list.add("B");
+          list.add("C");
+
+          Iterator<String> iterator = list.iterator();
+          while (iterator.hasNext()) {
+              String element = iterator.next();
+              if (element.equals("B")) {
+                  iterator.remove(); // Removes "B" from the list
+              }
+          }
+
+-------------------------------------------------------------------------------
+
+  ------------- ITERABLE INTERFACE -------------
+
+  Represents a collection that can be iterated over.
+
+  It has a single abstract method: Iterator<T> iterator()
+  Iterable provides Iterator. commonly implemented by ArrayList, HashSet etc.
+
+  and other default methods like forEach(), spliterator().
+
+  If the class implements Iterable, we can use for-each loop with those classes
+
+    Example:
+            List<String> list = new ArrayList<>();
+                 for (String item : list) {
+                    System.out.println(item);
+                 }
+
+----------------------------------------------------------------------------------
+
+
+------------------ ArrayList ------------------
+ArrayList is a dynamic array, it can grow and shrink in size.
+
+It is part of the Java Collections Framework and implements the List interface.
+ArrayList<Integer> integerList = new ArrayList<>();
+
+
+Important points :
+1. It is not synchronized, so it is not thread-safe.
+2. It allows duplicate elements.
+3. It maintains insertion order.
+4. It allows null values.
+5. Supports random access to elements using indexes.
+
+Advantages of ArrayList :
+
+1. Dynamic size
+2. Random Access
+3. Faster Iteration
+4. Supports Generics
+
+Disadvantages of ArrayList :
+
+1. ArrayList's dynamic resizing feature.
+   When ArrayList reaches its capacity, it creates a new array with approx 1.5 times the size and copies the elements from the old array to the new array.
+   This involves memory allocation and copying, which can be time-consuming.
+2. It is not Thread safe as it is not  synchronized.
+3. Not Suitable for Primitive Types
+4. Inefficient Insertion and Deletion :
+   Inserting or deleting elements in the middle of an ArrayList can be inefficient because it requires shifting elements to maintain the order.
+5. Not recommended for large datasets :
+   For large data sets, consider using other data structures like LinkedList or HashMap, which may offer better performance for specific operations.
+
+
+
+-------------------------------------------------------------------------------------
+
+
+
+---------------- Ways to iterate the elements of the collection in Java --------------------------
+There are various ways to traverse the collection elements:
+
+By Iterator interface.
+By for-each loop.
+By ListIterator interface.
+By for loop.
+By forEach() method.
+By forEachRemaining() method.
+
+
+
+
+-----------------------------------------------------------------------------------------------------
+
+
+----------------- LINKEDLIST -----------------
+
+LinkedList uses a doubly linked list to store elements.
+Linked list stores elements as nodes, where each node contains element and a reference to the next and previous nodes.
+
+Important points :
+1. It is not synchronized, so it is not thread-safe.
+2. It allows duplicate elements.
+3. It maintains insertion order.
+4. It allows null values.
+5. It is slower than ArrayList for random access but faster for insertion and deletion operations.
+6. It can be used as a list, stack or queue.
+7. When the rate of addition or removal rate is more than the read scenarios, then go for the LinkedList.
+ On the other hand, when the frequency of the read scenarios is more than the addition or removal rate, then ArrayList takes precedence over LinkedList.
+
+
+Advantages of LinkedList :
+1. Dynamic Size
+2. Efficient Insertions and Deletions
+3. Suitable for large datasets
+
+
+Disadvantages of LinkedList :
+
+1. It is not synchronized, so it is not thread-safe.
+2. Random Access is slower than ArrayList as it requires traversing the list.
+
+
+--------------------------------------------------------------------------------------
+
+----------------- DIFFERENCES BETWEEN ARRAYLIST AND LINKEDLIST -----------------
+
+1) ArrayList internally uses a dynamic array to store the elements.                                LinkedList internally uses a doubly linked list to store the elements.
+
+2) Manipulation with ArrayList is slow because it internally uses an array.                       Manipulation with LinkedList is faster than ArrayList because
+If any element is removed from the array, all the other elements are shifted in memory.           it uses a doubly linked list, so no bit shifting is required in memory.
+
+
+3) An ArrayList class can act as a list only because it implements List only.                     LinkedList class can act as a list and queue both because
+                                                                                                  it implements List and Deque interfaces.
+
+4) ArrayList is better for storing and accessing data.                                            LinkedList is better for manipulating data.
+
+5) The memory location for the elements of an ArrayList is contiguous.                            The location for the elements of a linked list is not contagious.
+
+
+----------------------------------------------------------------------------------------
+
+
+----------------- HASHSET -----------------
+
+HashSet is a collection that implements the Set interface and stores elements in a hash table.
+Internally, a HashSet uses a HashMap to store its elements.
+
+Important points :
+
+1. HashSet stores the elements by using a mechanism called hashing.
+2. Hashset contains unique elements only.
+3. It allows only one null value.
+4. It is not synchronized, so it is not thread-safe,for synchronization we can use the Collections.synchronizedSet
+5. It does not maintain any order of elements, Here, elements are inserted on the basis of their hashcode.
+6. HashSet is the best approach for search operations.
+
+
+Advantages of HashSet :
+
+1. Abitility to store unique elements.
+2. Fast access, removal and insertion of elements.
+
+
+Disadvantages of HashSet :
+
+1. It does not maintain any order of elements. To overcome this we can use LinkedHashSet.
+2. It is not synchronized, so it is not thread-safe.
+
+
+-----------------------------------------------------------------------------------------
+
+
+--------------------- LINKEDHASHSET -----------------
+
+LinkedHashSet class is a Hashtable and Linked list implementation of the Set interface that allows insertion-order iteration.
+
+Important points :
+
+1. It Maintains insertion order.
+2. It is not synchronized, so it is not thread-safe.
+
+
+Note: Keeping the insertion order in the LinkedHashset has some additional costs, both in terms of extra memory and extra CPU cycles.
+Therefore, if it is not required to maintain the insertion order, go for the lighter-weight HashMap or the HashSet instead.
+
+
+
+
+--------------------------------------------------------------------------------------------
+
+
+--------------------- TREESET -----------------
+
+TreeSet implements the Set interface that uses a tree for storage.
+The objects of the TreeSet class are stored in ascending order.
+
+Important points :
+
+1. It is sorted in natural order.
+2. It does not allow duplicate elements.
+3. It is not synchronized, so it is not thread-safe.
+
+
+we can pass a comparator to the constructor of TreeSet to sort the elements in a custom order.
+TreeSet(Comparator<? super E> comparator)
+
+--------------------------------------------------------------------------------------
+
+
+--------------------- QUEUE -----------------
+
+
+Queue works on the principle of FIFO (First In First Out).
+Queue ensures that elements are inserted at the end and removed from the beginning
+
+use cases : task scheduling, order processing, and managing print jobs.
+
+Important points :
+
+1. uses FIFO (First In First Out) order.
+2. PriorityQueue, ArrayBlockingQueue and LinkedList are the implementations that are used most frequently.
+
+
+-------------- PRIORITYQUEUE -----------------
+
+PriorityQueue<String> queue = new PriorityQueue<String>();
+
+
+ It is already described that the insertion and deletion of objects follows FIFO pattern in the Java queue.
+ However, sometimes the elements of the queue are needed to be processed according to the priority, that's where a PriorityQueue comes into action.
+
+
+NOTE : When you iterate over a PriorityQueue, the elements may not appear in sorted order —
+internal heap structure doesn't guarantee iteration order. But the removal always happens in priority order (lowest id first in this case).
+
+
+--------------------- DEQUE -------------------
+
+Deque is a double-ended queue that allows insertion and removal of elements from both ends.
+Therefore, a deque can be used as a stack or a queue, both LIFO and FIFO.
+
+The operations include addFirst(E e), addLast(E e), removeFirst(), and removeLast().
+
+
+------------------- ArrayDeque ----------------
+
+ArrayDeque is a resizable array implementation of the Deque interface.
+
+Important points :
+
+1. It is not synchronized, so it is not thread-safe.
+2. Unlike Queue, we can add or remove elements from both sides.
+3. Doesn't allow null elements.
+4. ArrayDeque is faster than LinkedList and Stack.
+
+
+
+
+----------------- MAP -----------------
+
+
+Map is a collection that stores key-value pairs.
+All the keys in a map are unique, and each key maps to exactly one value.
+Map<String, Integer> map = new HashMap<>();
+
+
+------------------ Map.Entry Interface ----------------------
+
+
+Map.Entry is an inner interface of the Map interface which represents a single pair of key-value in a map.
+
+
+
+---------------------- HashMap -----------------
+
+
+HashMap is a collection that implements the Map interface and stores key-value pairs in a hash table.
+allows constant-time performance for basic operations such as insertion, deletion, and retrieval on average, providing a good hash function and proper capacity management.
+
+Important points :
+
+1. It allows null values and one null key.
+2. It is not synchronized, so it is not thread-safe.
+3. if we try to insert the duplicate key, it will replace the old value with the new value.
+4. It does not maintain any order of elements.
+5. HashMap is the best approach for search operations.
+6. The initial default capacity of Java HashMap class is 16 with a load factor of 0.75.
+7. The load factor is a measure of how full the hash table is allowed to get before its capacity is automatically increased.
+
+------------------ LinkedHashMap -----------------
+
+LinkedHashMap is a hash table and linked list implementation of the Map interface that maintains insertion order.
+It is similar to HashMap but maintains a doubly linked list running through its entries.
+
+
+----------------- TreeHashMap -----------------
+
+TreeMap is a collection that implements the Map interface and stores key-value pairs in a red-black tree.
+It is sorted in natural order of keys.
+O(log n) time complexity for insertion, deletion and retrieval operations.
+
+

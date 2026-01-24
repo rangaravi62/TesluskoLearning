@@ -1,7 +1,6 @@
 package com.java8.streams;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 
 public class StreamsPrac {
@@ -36,6 +35,7 @@ public class StreamsPrac {
 //
 //        List<Integer> list = Arrays.asList(22,44,22,55,74,86,23,12,46,13,45);
 //        List<Integer> NumWith1List= list.parallelStream().map(i -> i+"").map(i->i.substring(0,1)).map(Integer::parseInt).collect(Collectors.toList());
+//    List<Integer> NumWith2List = list.stream().map(i -> i/10).collect(Collectors.toList());
 //        System.out.println(NumWith1List);
 //
 //

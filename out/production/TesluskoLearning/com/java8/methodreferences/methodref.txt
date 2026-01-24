@@ -1,0 +1,7 @@
+Reference to a Static Method	                    ClassName::staticMethodName	        Integer::parseInt
+
+Reference to an Instance Method of an Object	    instance::instanceMethodName	    example::contains
+
+Reference to an Instance Method of a Class	        ClassName::instanceMethodName	    String::toUpperCase
+
+Reference to a Constructor	                        ClassName::new	                    ArrayList::new

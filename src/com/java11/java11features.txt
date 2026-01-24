@@ -1,0 +1,92 @@
+----------------------------------------------
+String Enhancements
+----------------------------------------------
+
+String.strip() - Removes leading and trailing whitespace characters from a string.
+Note: strip() vs trim() → strip() is Unicode-aware; trim() is ASCII-only.
+
+isBlank() -> returns true if string is empty o having white spaces
+lines() -> returns a stream of lines
+repeat(int n) -> repeats the string n times
+
+------------------------------------------------
+Local-Variable Syntax for Lambdas
+------------------------------------------------
+
+Predicate<Integer> p = (var x) -> x > 0;
+
+for (var name : names) {
+    System.out.println(name);
+}
+
+var allows local variable type inference.
+The compiler automatically figures out the type of the variable based on the assigned value.
+Only works for local variables (inside methods, loops, or lambda parameters).
+
+-------------------------------------------------
+Immutable Collections (Factory Methods)
+-------------------------------------------------
+List<String> list = List.of("A", "B", "C"); // Immutable
+Set<Integer> set = Set.of(1, 2, 3);
+Map<String, Integer> map = Map.of("X", 10, "Y", 20);
+
+
+-------------------------------------------------
+New Optional Methods
+-------------------------------------------------
+
+Optional.or() -> Returns the value if present, otherwise returns the other value.
+Optional.stream() -> Returns a sequential Stream with a single element if a value is present, otherwise returns an empty Stream.
+Optional.isEmpty() -> Returns true if no value is present, otherwise false.
+
+--------------------------------------------------
+HTTP Client Api
+--------------------------------------------------
+
+Java 11 introduces a modern HTTP Client API (java.net.http.HttpClient) to replace the old HttpURLConnection.
+
+Supports:
+HTTP/1.1 and HTTP/2
+Synchronous and asynchronous requests
+Easy handling of headers, requests, and responses
+
+Synchronous ->
+The program waits for the request to complete before moving to the next line of code.
+Execution is blocked until a response is received.
+
+Use sync when the result is immediately needed.
+
+HttpClient client = HttpClient.newHttpClient();
+HttpRequest request = HttpRequest.newBuilder()
+        .uri(URI.create("https://jsonplaceholder.typicode.com/todos/1"))
+        .build();
+HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+System.out.println(response.body());
+
+Asynchronous ->
+The program does not wait for the request to complete.
+The request runs in the background, and the program continues executing other code.
+
+Use async when you want the program to continue doing other work while waiting for the response.
+
+client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+      .thenApply(HttpResponse::body)
+      .thenAccept(System.out::println)
+      .join();
+
+
+
+---------------------------------------------------
+New File Methods (NIO.2 Enhancements)
+---------------------------------------------------
+
+Files.writeString(Path, String) → Write a string directly to a file.
+Files.readString(Path) → Read entire file content as a string.
+
+---------------------------------------------------
+Running Single-File Source Code
+---------------------------------------------------
+java HelloWorld.java
+
+Java 11 allows you to run a .java file without compiling explicitly.
+

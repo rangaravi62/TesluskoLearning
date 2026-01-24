@@ -1,0 +1,14 @@
+-> What does string 'intern()' method do ?
+The intern() method in java is used to place a string in SCP (String Constant Pool) if it is not already there.
+if it is not present then it creates that string in scp and reference of that is returned
+
+
+-> What is use of string-tokenizer ?
+it is a legacy class, used to split the string into tokens.
+this is not preferred now a days, we can use split method of string instead
+
+
+-> Why char is 'preferred' to store password than strings ?
+this is because char[] is mutable and strings are immutable
+password stored in a strings remain in the memory until garbage collection
+with char[] each character can be overwritten with null char (\0) once the password is no longer needed

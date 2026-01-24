@@ -1,0 +1,103 @@
+String literals will be created in string pool inside heap memory which doesn't allow duplicates.
+ex : String s1 = "ravi"
+
+Strings created with new keyword will be created in heap memory.
+ex : String s2 = new String("ravi")
+
+
+String s1 = "ravi";
+String s2 = new String("ravi");
+s1.equals(s2) // true -> does the content comparision
+s1 == s2 // false -> does the reference comparision
+
+
+String s3 = "Ravi";
+s1.compareTo(s3) // -1 -> because s1 is less than s3
+compareTo method compares string lexographically
+if s1 == s2 -> returns 0
+if s1 > s2 -> returns +ve value
+if s1 < s2 -> returns -ve value
+
+
+String s = new String("Ranga");
+s.concat("Ravi");
+s = s.concat("Teja");
+System.out.println(s); // RangaTeja -> scp : "Ranga" , "Ravi" , "Teja"  - heap : "RangaTeja" , remaining two "Ranga" and "RangaRavi" are eligible for gc (garbage collection).
+
+
+
+ final String s1 = "Telusko";
+ String s2 = "Ineuron";
+ String s3 = "Telusko"+"Ineuron"; // for constants concatenation is done at compile time
+ String s4 = s1+s2;  // even though we're not using new keyword here, if there are references (s1,s2), it will be done at runtime, so it'll be stored in heap
+ String s5 = s1 + "Ineuron";
+ System.out.println(s4 == s5); // false, because both refer to the diff obj in heap
+ // scp -> "Telusko", "Ineuron", "TeluskoIneuron" - heap -> "TeluskoIneuron" , "TeluskoIneuron"
+
+ final String s6 = s1+"Ineuron"; // Here s1 is final , so the concatenation is done at compile time, this will be stored in scp.
+ System.out.println(s3 == s6); // true, because both refer to the same string literal in the string pool
+
+
+ -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+ ----------------------------- STRINGS ------------------------------
+
+ Strings are immutable in java, once created we cannot change the content of the string.
+ String s = "Ravi";
+ s = s.concat("Teja"); // this will create a new string object in heap memory and assign it to s, but the old reference will be eligible for garbage collection.
+
+
+String Constructors ------------
+
+String s1 = new String("Ravi");
+String s2 = new String(new char[]{'R', 'a', 'v', 'i'});
+String s3 = new String(new byte[]{65, 66, 67});
+String s4 = new String(new StringBuffer("Ravi"));
+String s5 = new String(new StringBuilder("Ravi"));
+System.out.println(s2); // Ravi
+System.out.println(s2 == s4); // false, because both are different objects in heap
+
+
+----------------------------- STRING BUFFER ------------------------------
+
+StringBuffer is mutable, we can change the content of the string.
+If the content is not fixed and thread safety is needed then we use string buffer.
+
+------------- StringBuffer Constructors
+
+StringBuffer sb1 = new StringBuffer();
+StringBuffer sb2 = new StringBuffer("Ravi");
+StringBuffer sb3 = new StringBuffer(100); // this will create a string buffer with initial capacity of 100
+StringBuffer sb4 = new StringBuffer(new char[]{'R', 'a', 'v', 'i'});
+StringBuffer sb5 = new StringBuffer(new byte[]{65, 66, 67});
+
+By default string buffer capacity is 16, if we exceed that then it will increase the capacity by 2*oldCapacity + 2
+
+
+---------------------------STRING BUILDER -----------------------------
+
+StringBuilder is mutable, we can change the content of the string.
+If the content is not fixed and thread safety is not needed then we use string builder.
+
+
+----------- StringBuilder Constructors
+
+StringBuilder sb1 = new StringBuilder();
+StringBuilder sb2 = new StringBuilder("Ravi");
+StringBuilder sb3 = new StringBuilder(100); // this will create a string builder with initial capacity of 100
+
+
+
+
+comparision between string buffer and string builder  ::: --------------------------
+
+            STRING BUFFER                                                                                   STRING BUILDER
+
+1. most methods in string buffer are synchronized, so it is thread safe.                 1. most methods in string builder are not synchronized, so it is not thread safe.
+
+2. string buffer is slower than string builder.                                           2. string builder is faster than string buffer.
+
+3. need to use when content is not fixed and thread safety is needed.                     3. need to use when content is not fixed and thread safety is not needed.
+
+4. == and equals() both are used for reference comparision                                4. == and equals() both are used for reference comparision
+

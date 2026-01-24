@@ -1,0 +1,201 @@
+-> Q. How Hashmap works internally ?
+hashmap works on the principle hashing, hashing is a process where the key is converted into fixed size numerical value, hashcode.
+this hashcode is used to determine the index of the bucket in the hashmap where the value will be stored.
+
+internally hashmap uses array of Node objects
+class Node<K,V> {
+int hash,
+K key,
+V value,
+Node<K,V> next
+}
+
+hashcode is generated using the hashcode() method of the object.
+in case of collisions, hashmap uses linked list to store the values at each index, collision occurs when two different keys generate the same hashcode.`
+in case of collisions, if many entries comes to the same bucket then red-black tree will be used for further optimization
+Note : if a bucket reaches the size of 8 in case of collisions then the linked list is converted into red-black tree
+
+put method working ->
+
+when put is called with key and value, the hashcode for key is generated using hashcode() method,
+then in that location the key and value are wrapped into Entry object and stored in that bucket.
+
+get method working ->
+
+when get is called with key, the hashcode for key is generated using hashcode() method,
+then in that location the linked list is traversed to find the key by using key's equals method, if found then the value is returned else null is returned.
+
+
+Time Complexity ->
+Average case (no or few collisions): Access -> O(1), insertion -> O(1), deletion -> O(1)
+Worst case (high collisions): Access -> O(n), insertion -> O(n), deletion -> O(n)
+Optimized worst case (Red-Black tree) : Access -> O(logn), insertion -> O(logn), deletion -> O(logn)
+
+---------------------------------------------------------------------------------------------------------
+
+-> Q. How to use a 'custom object' as 'key' in Hashmap ?
+To use a custom object as a key in a hashmap, we need to override the equals and hashcode methods in the custom class.
+equals method is used to check if two keys are equal or not.
+hashcode method is used to generate the hashcode for the key.
+
+-----------------------------------------------------------------------------------------------------------
+
+-> Q. What is Hashmap Class in Java ?
+
+HashMap is a class in Java that implements the Map interface.
+it stores the values in the form of key-value pairs.
+keys are unique and values can be duplicate.
+one null key is allowed
+doesn't maintain the insertion order, for ordering we can use LinkedHashMap
+not synchronized, for synchronization we can use ConcurrentHashMap
+
+load factor is a parameter which will be used to decide when to increase the size of the hashmap.
+default load factor is 0.75, which means when the size of the hashmap reaches 75% of the capacity then the size of the hashmap will be increased.
+load factor = no of entries / capacity
+
+---------------------------------------------------------------------------------------------------------------
+
+-> Q. Is Hashmap thread safe in Java ?
+No, Hashmap is not thread safe, for thread safety we can use ConcurrentHashMap.
+we can use Collections.synchronizedMap() to make any map thread safe.
+
+------------------------------------------------------------------------------------------------------------------
+
+-> Q. Explain changes in Hashmap in Java 8 ?
+Before java 8 when there were many collisions at a particular bucket then that bucket used to contain a linked list of entries.
+but in java 8 when the size of the linked list reaches 8 then the linked list is converted into a red-black tree for further optimization.
+
+------------------------------------------------------------------------------------------------------------------
+
+-> Q. Explain 'equals' and 'hashcode' method with help of an example ?
+let Employee e1 = new Employee(1, "Ravi");
+let Employee e2 = new Employee(1, "Ravi");
+e1.equals(e2) -> gives false because it does reference comparision
+
+we need to override equals and hashcode method to make it work as expected
+equals method is used to check if two objects are equal or not
+hashcode method is used to generate the hashcode for the object
+
+@Override
+public boolean equals(Object o) {
+    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) return true;
+    Employee employee = (Employee) o;
+    return id == employee.id && name.equals(employee.name);
+    }
+
+    now equals method will give true
+
+
+if two objects are equal then their hashcode should also be equal
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name);
+    }
+
+
+--------------------------------------------------------------------------------------------------------------------
+
+-> Q. How to sort a hashmap ?
+using Treemap, we can sort it in natural sorting order
+if we want custom sorting then we can pass a comparator to the constructor
+
+---------------------------------------------------------------------------------------------------------------------
+
+-> Q. How to retrieve value if 'two object keys' have same hashcode ?
+
+If two object keys have the same hashcode, the HashMap will store them in the same bucket as a linked list.
+When retrieving a value, the HashMap will iterate through the linked list and use the equals() method of key's to find the correct key.
+
+---------------------------------------------------------------------------------------------------------------------
+
+-> Q. What is difference between fail-fast and fail-safe iterators ?
+Fail fast iterators throw ConcurrentModificationException if the collection is structurally modified while iterating over it.
+ex : ArrayList, HashMap, HashSet
+Fail safe iterators don't throw any exception if the collection is modified while iterating over it.
+ex : ConcurrentHashMap, CopyOnWriteArrayList
+
+If we use iterator inbuilt method remove() then the iterator will remove the element from the collection and it will not throw any exception.
+
+---------------------------------------------------------------------------------------------------------------------
+
+-> Q. What is vector class in Java ?
+vector is a legacy class which is similar to arraylist but it is synchronized.
+
+----------------------------------------------------------------------------------------------------------------------
+
+-> Q. What is weak hashmap class in Java ?
+
+WeakHashMap is a class where the keys which are no longer strongly referred by any other object are removed by garbage collector.
+The keys which are not referenced those key value pair will be removed by garbage collector.
+
+Map<Object, String> map = new WeakHashMap<>();
+        Object key1 = new Object();
+        Object key2 = new Object();
+
+        map.put(key1, "Value1");
+        map.put(key2, "Value2");
+
+        System.out.println("Before GC: " + map);
+
+        key1 = null;  // remove strong reference to key1
+        System.gc();  // request garbage collection
+
+        try { Thread.sleep(1000); } catch (InterruptedException e) {}
+
+        System.out.println("After GC: " + map);
+
+
+------------------------------------------------------------------------------------------------------------------------
+
+
+-> Q. What is identity hashmap class in Java ?
+Identity HashMap is a class where the keys are compared using == operator instead of equals() method.
+
+------------------------------------------------------------------------------------------------------------------------
+
+-> Q. What is 'concurrent hashmap' ?
+Concurrent HashMap is a class which is thread safe and can be used in multi-threaded environment.
+it is similar to HashTable but it is more efficient than HashTable.
+
+doesn't allow null keys and values.
+
+------------------------------------------------------------------------------------------------------------------------
+
+-> Q. How does Hashmap handles null keys in java ?
+if we put key as null and then if we try to calculate hashcode then null.hashcode() will throw NPE
+HashMap handles null key in a different way, it stores null key in the 0th index of the bucket array.
+
+------------------------------------------------------------------------------------------------------------------------
+
+-> Q. Why is 'string' considered a good key for hashmap ?
+Strings and other wrapper classes are considered as good keys for hashmap because they are immutable.
+hashcode of the immutable objects will not change, making it a reliable identifier.
+
+------------------------------------------------------------------------------------------------------------------------
+
+-> Q. Explain working of 'hashset' class in java ?
+HashSet internally uses HashMap to store the elements.
+HashSet stores the elements as keys in the HashMap and the value is a constant.
+HashSet doesn't allow duplicate values because HashMap doesn't allow duplicate keys.
+
+Each element is stored in key of a HashMap and value will be a constant which will be similar for all the elements.
+
+private static final Object PRESENT = new Object(); // Dummy value
+
+add(E e) -> map.put(e,PRESENT) == null
+remove(E e) -> map.remove(e) !=  or map.remove(e) == PRESENT
+
+
+------------------------------------------------------------------------------------------------------------------------
+
+-> Q. diff between List.of() and Arrays.asList()
+
+List.of() returns an immutable list, we cannot add or remove elements from it.
+null elements are not allowed
+
+Arrays.asList() returns a mutable list, it is backed by an array, we can modify using set metho
+list1.set(1, "X");
+null elements are allowed
+

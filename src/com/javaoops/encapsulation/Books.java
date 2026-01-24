@@ -1,6 +1,5 @@
 package com.javaoops.encapsulation;
 
-import java.awt.print.Book;
 
 public class Books {
     int pgNo; // here there is no protection for the data any class can access Books class, the Books class written by the dev assuming that pgNo won't be negative

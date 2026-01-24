@@ -1,0 +1,344 @@
+----------------------------------------------------------------
+Java Lambda Expressions
+----------------------------------------------------------------
+
+
+Java 8 introduced lambda expressions, which are a way to provide clear and concise syntax for writing anonymous methods (functions) in Java.
+It helps to iterate, filter and extract data from the collection.
+The Lambda expression is used to provide the implementation of an interface that has a functional interface.
+
+
+A functional interface is an interface that contains only one abstract method.
+It can have multiple default or static methods.
+
+ex :
+
+@FunctionalInterface
+public interface MyFunctionalInterface {
+    void myMethod();
+}
+
+
+syntax
+( arguments ) -> { body }
+
+() -> {
+//Body of no parameter lambda
+}
+
+(p1) -> {
+//Body of single parameter lambda
+}
+
+(p1,p2) -> {
+//Body of multiple parameter lambda
+}
+
+ brackets are mandatory if we are using return statement in lambda expression.
+
+(a, b) -> a + b;   without return
+
+
+EX :
+
+
+public class LambdaExpressionExample9{
+    public static void main(String[] args) {
+
+        //Thread Example without lambda
+        Runnable r1=new Runnable(){
+            public void run(){
+                System.out.println("Thread1 is running...");
+            }
+        };
+        Thread t1=new Thread(r1);
+        t1.start();
+        //Thread Example with lambda
+        Runnable r2=()->{
+                System.out.println("Thread2 is running...");
+        };
+        Thread t2=new Thread(r2);
+        t2.start();
+    }
+}
+
+
+
+
+
+Advantages of Lambda Expressions:
+
+1. Less code: Lambda expressions allow you to write less code compared to anonymous classes.
+2. Readability: Lambda expressions can make your code more readable and easier to understand.
+3. Functional programming: Lambda expressions enable functional programming in Java, allowing you to treat functions as first-class citizens.
+4. Parallel processing: Lambda expressions can be used with the Stream API to perform parallel processing on collections.
+
+Disadvantages of Lambda Expressions:
+
+1. Debugging: Debugging lambda expressions can be more difficult than debugging traditional code.
+2. Restricted to Functional Interfaces: Lambda expressions can only be used with functional interfaces, which may limit their use in some cases.
+
+
+
+----------------------------------------------------------------
+Method References
+----------------------------------------------------------------
+
+Method references are a shorthand notation of a lambda expression to call a method.
+
+1. Static method reference
+
+ClassName::staticMethodName
+
+interface Sayable{
+    void say();
+}
+public class MethodReference  {
+    public static void saySomething(){
+        System.out.println("Hello, this is static method.");
+    }
+    public static void main(String[] args) {
+        // Referring static method
+        Sayable sayable = MethodReference::saySomething;
+        // Calling interface method
+        sayable.say();
+    }
+}
+
+
+2. Instance method reference
+
+
+ClassName::instanceMethodName
+
+interface Sayable{
+    void say();
+}
+
+public class MethodReference  {
+    public void saySomething(){
+        System.out.println("Hello, this is instance method.");
+    }
+    public static void main(String[] args) {
+        // Referring non-static method
+        MethodReference methodReference = new MethodReference();
+        Sayable sayable = methodReference::saySomething;
+        // Calling interface method
+        sayable.say();
+    }
+}
+
+
+3. Constructor reference
+
+ClassName::new
+
+ArrayList<String> list = ArrayList::new;
+
+
+
+------------------------------------------------------------
+Functional Interfaces
+------------------------------------------------------------
+
+
+Functional interfaces are interfaces that have exactly one abstract method. They can have multiple default or static methods.
+Functional Interface is also known as Single Abstract Method Interfaces or SAM Interfaces. It is a new feature in Java, that helps to achieve functional programming approach.
+A functional interface can extend another interface only if it does not have any abstract method.
+
+Java predefined functional interfaces are:
+
+
+1. Predicate<T> - Represents a boolean-valued function of one argument.
+It has a method test() that takes an argument and returns a boolean value.
+Predicate<String> predicate = (s) -> s.length() > 5;
+
+2. Consumer<T> - Represents an operation that accepts a single input argument and returns no result.
+It has a method accept() that takes an argument and returns void.
+Consumer<String> consumer = (s) -> System.out.println(s);
+
+3. Supplier<T> - Represents a supplier of results. It has a method get() that takes no arguments and returns a result.
+Supplier<String> supplier = () -> "Hello, World!";
+
+4. Function<T, R> - Represents a function that accepts one argument and produces a result.`
+It has a method apply() that takes an argument and returns a result.
+Function<String, Integer> function = (s) -> s.length();
+
+5. UnaryOperator<T> - Represents a function that takes one argument and returns a result of the same type.
+It has a method apply() that takes an argument and returns a result.
+UnaryOperator<String> unaryOperator = (s) -> s.toUpperCase();
+
+6. BinaryOperator<T> - Represents a function that takes two arguments of the same type and returns a result of the same type.
+It has a method apply() that takes two arguments and returns a result.
+BinaryOperator<Integer> binaryOperator = (a, b) -> a + b;
+
+7. BiConsumer<T, U> - Represents an operation that accepts two input arguments and returns no result.
+It has a method accept() that takes two arguments and returns void.
+BiConsumer<String, Integer> biConsumer = (s, i) -> System.out.println(s + " " + i);
+
+8. BiPredicate<T, U> - Represents a predicate (boolean-valued function) of two arguments.
+It has a method test() that takes two arguments and returns a boolean value.
+BiPredicate<String, Integer> biPredicate = (s, i) -> s.length() > i;
+
+9. BiFunction<T, U, R> - Represents a function that accepts two arguments and produces a result.
+It has a method apply() that takes two arguments and returns a result.
+BiFunction<String, Integer, String> biFunction = (s, i) -> s.substring(i);
+
+
+
+
+
+
+
+----------------------------------------------------------------
+stream Api
+----------------------------------------------------------------
+
+The Stream API is a new abstraction introduced in Java 8 that allows you to process sequences of elements (such as collections) in a functional style.
+It provides a way to perform operations on collections of data in a more declarative and functional manner.
+The Stream API allows you to perform operations such as filtering, mapping, and reducing on collections of data.
+
+
+1. Intermediate operations: These operations return a new stream and do not modify the original stream. Examples include filter(), map(), and sorted().
+ex :
+
+List<Integer> numbers = Arrays.asList(1, 2, 3, 4, 5, 6);
+List<Integer> evenSquares = numbers.stream()
+                                   .filter(n -> n % 2 == 0)
+                                   .map(n -> n * n)
+                                   .collect(Collectors.toList());
+       here until the collect method is called the operations are not performed, once he terminal operation is called then the operations are performed.
+       once the stream is terminated it cannot be re used
+       this is called lazy evaluation.
+
+map(Function<T,R>) : Transforms each element of the Stream into another form using the provided function.
+filter(Predicate<T>) : Filters the elements of the Stream based on the provided predicate.
+sorted() : Sorts the elements of the Stream in natural order or based on a provided comparator.
+distinct() : Returns a stream with distinct elements (removes duplicates).
+limit(long maxSize) : Returns a stream with a maximum size of maxSize.
+skip(long n) : Skips the first n elements of the stream.
+flatMap(Function<T, Stream<R>>) : Flattens a nested stream into a single stream.
+peek(Consumer<T>) : Performs an action on each element of the stream without modifying it.
+
+
+2. Terminal operations: These operations produce a result or a side effect and terminate the stream. Examples include forEach(), collect(), and reduce().
+
+forEach(Consumer<T>): Acts as each element of the Stream.
+collect(Collector<T, A, R>): Reduces the elements of the Stream into a mutable result container, such as a list or a map.
+reduce(BinaryOperator<T>): Reduces the elements of the Stream to a single value using an associative accumulation function.
+count(): Returns the count of elements in the Stream.
+anyMatch(Predicate<T>): Returns true if any element of the Stream matches the given predicate.
+allMatch(Predicate<T>): Returns true if all elements of the Stream match the given predicate.
+noneMatch(Predicate<T>): Returns true if no elements of the Stream match the given predicate.
+findFirst(): Returns an Optional describing the first element of the Stream, or an empty Optional if the Stream is empty.
+findAny(): Returns an Optional describing some element of the Stream, or an empty Optional if the Stream is empty.
+
+
+3. Short-circuiting operations: These operations can terminate the stream processing early. Examples include anyMatch(), allMatch(), and findFirst().
+A short-circuit operation is an operation that may not process all elements of the stream to produce a result.
+
+anyMatch(Predicate<T>): Stops processing and returns true if any element matches the given predicate.
+allMatch(Predicate<T>): Stops processing and returns false if any element does not match the given predicate.
+noneMatch(Predicate<T>): Stops processing and returns true if no elements match the given predicate.
+findFirst(): Returns the first element encountered in the Stream and then stops processing.
+findAny(): Returns any element encountered in the Stream and then stops processing.
+
+4. Parallel streams: The Stream API allows you to process streams in parallel, taking advantage of multi-core processors. You can create a parallel stream using the parallelStream() method on a collection.
+
+5. Lazy evaluation: The Stream API uses lazy evaluation, meaning that intermediate operations are not executed until a terminal operation is invoked. This allows for more efficient processing of large data sets.
+
+
+
+-----------------------------------------------------
+Abstract Class vs Java 8 Interface
+-----------------------------------------------------
+
+After having default and static methods inside the interface, we think about the need of abstract class in Java.
+An interface and an abstract class is almost similar except that you can create constructor in the abstract class whereas you can't do this in interface.
+We can create the constructor but cannot create an object of an abstract class.
+
+
+
+abstract class AbstractClass{
+    public AbstractClass() {        // constructor
+        System.out.println("You can create constructor in abstract class");
+    }
+    abstract int add(int a, int b); // abstract method
+    int sub(int a, int b){      // non-abstract method
+        return a-b;
+    }
+    static int multiply(int a, int b){  // static method
+        return a*b;
+    }
+}
+
+-----------------------------------------
+forEach()
+-----------------------------------------
+
+The forEach() method is a terminal operation that performs an action for each element of the stream.
+It takes a Consumer<T> as an argument, which defines the action to be performed on each element.
+
+it is a straightforward way to do iteration over collection.
+
+ex:  gamesList.forEach(game -> System.out.println(game));
+
+forEachOrdered() -> forEachOrdered() guarantees that the elements are processed in the order specified by the stream.
+
+
+-----------------------------------------------------
+Collectors class
+-----------------------------------------------------
+
+The Collectors class is a utility class in the java.util.stream package that provides various static methods to create common collectors.
+
+It is used to perform reduction operations on the elements of a stream and collect the results into a collection, such as a List, Set, or Map.
+
+
+collect(Collectors.toList())
+
+collect(Collectors.toSet())
+
+collect(Collectors.toMap())
+
+collect(Collectors.joining())
+
+collect(Collectors.groupingBy())
+
+collect(Collectors.summingInt(x->x.id))
+
+collect(Collectors.averagingInt(x->x.id))
+
+collect(Collectors.averagingDouble(p->p.price))
+
+collect(Collectors.counting())
+
+
+-----------------------------------------------------
+Optional Class
+-----------------------------------------------------
+
+
+The Optional class is a container object which may or may not contain a non-null value.
+It is a public final class and used to deal with NullPointerException in Java
+
+
+-------------------------------------------------------
+Nashorn JavaScript Engine
+-------------------------------------------------------
+
+Nashorn is a JavaScript engine introduced in Java 8.
+It allows Java applications to execute JavaScript code at runtime.
+Replaces the older Rhino engine (from Java 6/7) and is faster and more lightweight.
+
+
+ScriptEngineManager manager = new ScriptEngineManager();
+        ScriptEngine engine = manager.getEngineByName("nashorn");
+
+        String script = "var a = 10; var b = 20; a + b;";
+        Object result = engine.eval(script);
+
+        System.out.println(result); // 30
+
+
+

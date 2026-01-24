@@ -12,6 +12,9 @@ public enum Day {
     private String description;
 
     // Constructor (implicitly private)
+    // In Java, all constructors in an enum are implicitly private, even if you do not explicitly declare them as private.
+    // This is because enum types are designed to have a fixed set of constants, and the private constructor ensures that no
+    // additional instances of the enum can be created outside of the enum definition.
     Day(String description) {
         this.description = description;
     }

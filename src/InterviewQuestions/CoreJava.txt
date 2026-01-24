@@ -1,0 +1,30 @@
+-> what's JIT compiler in java?
+in java the .java file is first compiled into .class byte code, after this the jvm interprets ine by line, this process is slow,
+this is where JIT compiler comes to the picture, At runtime, the JIT compiler identifies frequently executed code (called hot code) and converts it into machine code on the spot.
+
+-> How to make 'class immutable' in Java ?
+immutable classes are those whose state cannot be modified
+1. make the class final
+2. make the fields private and final
+3. remove setter methods
+4. initialize the fields using constructor
+5. avoid returning mutable objects
+
+-> Does Java support 'multiple' inheritances ?
+No, Java doesn't support muliple interitance through classes due to diamond problem.
+for instance we have class A, class B and class C that inherit A, now class D inherits B and C forming a diamond shaped structure.
+Now if there are any common methods in B and C this will cause a conflict and gives compilation error.
+To avoid this we use interfaces to achieve multiple inheritance.
+
+-> Can we override static method in Java ?
+No, we cannot override static methods
+but we can overload them.
+they belong to class and not to object, hence we cannot override them.
+
+
+-> Q. Why 1=1 is true but 1000=1000 is false when dealing with wrapper classes in java ?
+Java caches Integer objects in the range -128 to 127 for performance optimization. This is part of the Integer class implementation.
+so the 1==1 is true because cache references are same.
+1000==1000 is false because 2 new objects are created.
+
+

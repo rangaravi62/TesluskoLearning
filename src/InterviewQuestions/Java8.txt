@@ -1,0 +1,4 @@
+-> What's the use of default and static methods?
+
+default -> These are introduced to add new methods in existing interfaces without breaking the existing code.
+static -> These are introduced to add utility/helper methods in interfaces.

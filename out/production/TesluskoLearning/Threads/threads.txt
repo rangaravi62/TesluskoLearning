@@ -1,0 +1,211 @@
+Threads ------
+
+A thread is a lightweight subprocess, the smallest unit of processing. It is a separate path of execution.
+Threads are independent. If an exception occurs in one thread, it does not affect other threads. It uses a shared memory area.
+one process can have multiple threads.
+
+Threads are used to perform multiple tasks simultaneously. They can be created by extending the Thread class or implementing the Runnable interface.
+
+
+Java provides built-in support for multithreading through the java.lang.Thread class and the java.lang.Runnable interface.
+Thread class extends the Object class and implements the Runnable interface.
+
+-----------------------------
+Thread States
+-----------------------------
+
+A thread can be in one of the following states:
+
+1. New: The thread is created but not yet started.
+2. Runnable: The thread is ready to run and waiting for CPU time.
+3. Blocked: The thread is blocked waiting for a monitor lock to enter a synchronized block/method.
+4. Waiting: The thread is waiting indefinitely for another thread to perform a particular action (e.g., using Object.wait()).
+5. Timed Waiting: The thread is waiting for another thread to perform an action for up to a specified waiting time (e.g., using Thread.sleep()).
+6. Terminated: The thread has completed its execution or has been terminated.
+
+
+-----------------------------
+Advantages of Multithreading
+-----------------------------
+
+1. Improved performance: Threads can run concurrently, making better use of CPU resources and improving application performance.
+2. Resource sharing: Threads share the same memory space, which allows for efficient communication and data sharing between threads.
+3. Parallel Execution: Threads can perform multiple tasks simultaneously, leading to faster execution of programs.
+4. Better CPU Utilization: Threads can operate in parallel, optimizing the use of available CPU resources, particularly on multi-core processors.
+
+
+-----------------------------
+Disadvantages of Multithreading
+-----------------------------
+
+1. Complexity: Compared to single-threaded systems, multithreaded applications are far more difficult to write, test, and debug.
+2. Problems with synchronization: Inadequate management of shared resources can result in issues like race situations, deadlocks, and inconsistent data.
+3. Unpredictable Behaviour: If threads are not correctly synchronized, the CPU scheduler, which controls the threads' execution order, might cause unexpected results.
+
+
+
+------------------------------
+Different thread states
+------------------------------
+
+1. New: The thread is created but not yet started.
+   - Example: `Thread t = new Thread();`
+
+2. Active: When a thread invokes the start() method, it moves from the new state to the active state.
+   The active state contains two states within it: one is runnable, and the other is running.
+
+    - Runnable: The thread is ready to run and waiting for CPU time.
+     In the runnable state, the thread may be running or may be ready to run at any given instant of time.
+      It is the duty of the thread scheduler to provide the thread time to run, i.e., moving the thread the running state.
+
+    - Running: The thread is currently executing its task.
+      When the thread scheduler selects a thread to run, it moves from the runnable state to the running state.
+      The running state is where the thread is actively executing its code.
+
+
+3. Blocked or Waiting :
+      For example, a thread (let's say its name is A) may want to print some data from the printer.
+       However, at the same time, the other thread (let's say its name is B) is using the printer to print some data.
+        Therefore, thread A has to wait for thread B to use the printer. Thus, thread A is in the blocked state.
+        A thread in the blocked state is unable to perform any execution and thus never consume any cycle of the CPU.
+         Hence, we can say that thread A remains idle until the thread scheduler reactivates thread A, which is in the waiting or blocked state.
+
+      When the main thread invokes the join() method then, it is said that the main thread is in the waiting state.
+       The main thread then waits for the child threads to complete their tasks. When the child threads complete their job,
+       a notification is sent to the main thread, which again moves the thread from waiting to the active state.
+
+
+
+4. Timed Waiting:
+     Sometimes, waiting for leads to starvation. For example, a thread (its name is A) has entered the critical section of a
+     code and is not willing to leave that critical section. In such a scenario, another thread (its name is B) has to wait forever,
+     which leads to starvation. To avoid such scenario, a timed waiting state is given to thread B.
+      Thus, thread lies in the waiting state for a specific span of time, and not forever.
+       A real example of timed waiting is when we invoke the sleep() method on a specific thread.
+       The sleep() method puts the thread in the timed wait state. After the time runs out, the thread wakes up and start its execution from when it has left earlier.
+
+
+5. Terminated:
+    A thread reaches the termination state because of the following reasons:
+
+    when a thread has finished its job, then it exists or terminates normally.
+
+    Abnormal termination: It occurs when some unusual events such as an unhandled exception or segmentation fault.
+
+
+
+
+    --- one can get the current state of a thread using the Thread.getState() method
+
+
+-----------------------------
+    Ways to create threads
+-----------------------------
+
+
+1. By extending the Thread class
+2. By implementing the Runnable interface
+3. using Thread Class: Thread(String Name)
+   ex : Thread t= new Thread("My first thread");
+4. using Thread Class: Thread(Runnable r, String name)
+   ex : Thread t= new Thread(new MyRunnable(), "My first thread");
+
+
+
+-----------------------------
+Thread Scheduler
+-----------------------------
+
+A component of Java that decides which thread to run or execute and which thread to wait is called a thread scheduler in Java.
+In Java, a thread is only chosen by a thread scheduler if it is in the runnable state.
+
+if there is more than one thread in the runnable state, it is up to the thread scheduler to pick one of the threads and ignore the other ones.
+There are some criteria that decide which thread will execute first. There are two factors for scheduling a thread i.e. Priority and Time of arrival.
+
+Priority: Priority of each thread lies between 1 to 10. If a thread has a higher priority,
+it means that thread has got a better chance of getting picked up by the thread scheduler.
+
+
+Time of Arrival: Suppose two threads of the same priority enter the runnable state,
+then priority cannot be the factor to pick a thread from these two threads.
+ In such a case, arrival time of thread is considered by the thread scheduler. A thread that arrived first gets the preference over the other threads.
+
+
+
+
+-----------------------------
+Thread.sleep()
+-----------------------------
+
+sleep method is a static method of the Thread class that pauses the execution of the current thread for a specified period of time.
+
+public static void sleep(long mls) throws InterruptedException
+public static void sleep(long mls, int n) throws InterruptedException
+
+
+
+
+---------------------------
+What if we call Java run() method directly instead start() method?
+---------------------------
+
+Each thread starts in a separate call stack.
+Invoking the run() method from the main thread, the run() method goes onto the current call stack rather than at the beginning of a new call stack.
+
+
+Join()
+
+When the join() method is invoked, the current thread stops its execution and the thread goes into the wait state.
+The current thread remains in the wait state until the thread on which the join() method is invoked has achieved its dead state.
+If interruption of the thread occurs, then it throws the InterruptedException.
+
+join()
+
+join(long mls)
+
+
+-----------------------
+Naming Thread
+-----------------------
+
+setName(name)
+
+getName()
+
+The currentThread() method returns a reference of the currently executing thread.
+
+------------------------
+Thread Priority in Java
+------------------------
+
+public final int getPriority()
+
+public final void setPriority(int newPriority) -> range from 1 to 10
+
+3 constants defined in Thread class:
+
+public static int MIN_PRIORITY = 1
+public static int NORM_PRIORITY = 5
+public static int MAX_PRIORITY = 10
+
+if we set any priority to main thread the child thread will also have the same priority as the main thread.
+
+
+------------------------
+Daemon Thread in Java
+-------------------------
+
+A daemon thread is a low-priority thread that runs in the background to perform tasks such as garbage collection, memory management, etc.
+
+Daemon thread in Java is a service provider thread that provides services to the user thread.
+Its life depend on the mercy of user threads i.e. when all the user threads dies, JVM terminates this thread automatically.
+
+ex : GC
+
+You can see all the detail by typing the jconsole in the command prompt. The jconsole tool provides information about the loaded classes, memory usage, running threads etc.
+
+
+setDaemon(boolean status)
+isDaemon()
+
+Note : Note: If you want to make a user thread as Daemon, it must not be started otherwise it will throw IllegalThreadStateException.
