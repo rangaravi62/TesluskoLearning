@@ -1,0 +1,643 @@
+1) What are issues without volatile keyword ?
+
+The volatile keyword solves the visibility issue.
+The volatile keyword ensures the changes made to a variable are  immediately visible to the other threads which are accessing that variable.
+Without volatile threads may cache variables locally and different threads will be having different values
+
+Ex :
+
+int count = 0;
+public void incrementCount() {
+    count++;
+}
+
+public int getCount() {
+    return count;
+}
+
+let's say 1000 threads use incrementCount() we expect count to be 1000, but it'll be less than 1000 since some updates are lost.
+
+Issues without volatile ->
+
+1. visibility issues : threads may not see the updated value.
+2. Race conditions : count++ is not atomic, multiple threads can read the same value simultaneously
+
+Volatile solves the visibility issue but not the race issues,
+even with volatile if 2 threads access the updated variable value simultaneously then the updates will be lost resulting the output less than 1000.
+
+To solve these visibility and race issues
+
+1. Either we can make the incrementCount() synchronized, synchronized keyword ensures both visibility and atomicity
+2. Using AtomicInteger
+Private AtomicInteger count = new AtomicInteger(0);
+public void incrementCount() {
+    count.incrementAndGet();
+}
+
+public int getCount() {
+    return count.get();
+}
+
+
+Finally, Volatile keyword is used when you need to ensure only visibility of a variable updates across threads but not the atomicity.
+ex : A common scenario where we have a flag or a state variable and multiple threads keeps on read and write.
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+2) What is volatile keyword in Java ?
+
+The volatile keyword solves the visibility issue.
+The volatile keyword ensures the changes made to a variable are  immediately visible to the other threads which are accessing that variable.
+Without volatile threads may cache variables locally and different threads will be having different values
+
+Finally, Volatile keyword is used when you need to ensure only visibility of a variable updates across threads but not the atomicity.
+ex : A common scenario where we have a flag or a state variable and multiple threads keeps on read and write.
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+3) What are different ways to create threads in Java ?
+
+1. by extending Thread class
+
+class MyThread extends Thread {
+    public void run() {
+        System.out.println("Thread is running");
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        MyThread t1 = new MyThread();
+        t1.start();
+    }
+}
+
+2. by implementing Runnable interface
+
+class MyRunnable implements Runnable {
+    public void run() {
+        System.out.println("Thread is running");
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Thread t1 = new Thread(new MyRunnable());
+        t1.start();
+    }
+}
+
+3. by using lambda expression (Java 8 and above)
+
+
+public class Main {
+    public static void main(String[] args) {
+        Thread t1 = new Thread(() -> {
+            System.out.println("Thread is running");
+        });
+        t1.start();
+    }
+}
+
+4. Using ExecutorService (Java 5 and above)
+
+
+public class Main {
+    public static void main(String[] args) {
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        Runnable task = () -> {
+            System.out.println("Thread is running");
+        };
+        executor.execute(task);
+        executor.shutdown();
+    }
+}
+
+
+5. CompletableFuture (Java 8 and above)
+
+public class Main {
+    public static void main(String[] args) {
+        CompletableFuture.runAsync(() -> {
+            System.out.println("Thread is running");
+        });
+    }
+}
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+4) Thread Methods in java
+
+1. start() : starts the thread and JVM calls the run() method of the thread
+2. run() : contains the code that will be executed by the thread
+3. sleep(long millis) : pauses the thread for specified milliseconds
+4. join() : waits for the thread to die (thread1.join() main thread will wait until thread1 completes its task)
+5. join(long millis) : waits for the thread to die for specified milliseconds
+6. interrupt() : interrupts the thread (sets the interrupted status to true)
+7. isInterrupted() : checks if the thread is interrupted or not
+8. getId() : returns the thread id
+9. getName() : returns the thread name
+10. setName(String name) : sets the thread name
+11. getPriority() : returns the thread priority
+12. setPriority(int priority) : sets the thread priority
+13. getState() : returns the thread state (NEW, RUNNABLE)
+14. isAlive() : checks if the thread is alive or not
+15. yield() : causes the currently executing thread to pause and allow other threads to execute
+16. currentThread() : returns a reference to the currently executing thread
+17. setDaemon(boolean on) : marks the thread as daemon or user thread
+18. isDaemon() : checks if the thread is daemon or user thread
+19. wait() : causes the current thread to wait until another thread invokes notify() or notifyAll() on the same object
+ex :  synchronized(obj) {
+    obj.wait();
+}
+20. wait(long millis) : causes the current thread to wait for specified milliseconds
+ex :  synchronized(obj) {
+    obj.wait(1000);
+}
+
+21. notify() : wakes up a single thread that is waiting on the object's monitor
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+5) What is thread local in multi-threading ?
+
+ThreadLocal provides each thread with its own separate copy of a variable.
+Changes made by one thread to its ThreadLocal instance will not visible to other threads
+Useful when you want to maintain thread-specific data that should not be shared between threads.
+This ensures that the variable is not shared between threads, preventing concurrency issues.
+
+ex :
+
+private static ThreadLocal<Integer> threadLocalCount = ThreadLocal.withInitial(() -> 0);
+
+public void static main() {
+    Thread t1 = new Thread(() -> {
+        threadLocalCount.set(100);
+        System.out.println("Thread 1 count: " + threadLocalCount.get());
+    });
+
+    Thread t2 = new Thread(() -> {
+        threadLocalCount.set(200);
+        System.out.println("Thread 2 count: " + threadLocalCount.get());
+    });
+}
+
+Each thread independently maintains its own count variable without interfering with each other.
+t1 -> 100, t2 -> 200
+
+use cases :
+
+1. Uses Sessions :
+Store thread specific user session data.
+2. Contextual Information :
+Track Thread-Specific context for logging or debugging
+3. security context:
+store security related data, such as security context or permissions that are specific to each thread.
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+6) Difference between synchronized, lock, and semaphore ?
+
+Synchronized :
+
+Usage : Used to ensure that only one thread can access a block of code or method at a time.
+Fairness control : No guarantee of fairness, meaning threads may not get access in the order they requested it.
+
+ex :
+
+synchronized(this) {
+    // critical section
+}
+
+Lock :
+
+Usage : Provides more advanced features than synchronized, such as tryLock(), lockInterruptibly(), and the ability to create fair locks.
+Fairness control : Can be configured to be fair, meaning threads will get access in the order they requested it.
+
+ex :
+
+int count  = 0;
+private final Lock lock = new ReentrantLock();
+public void increment() {
+    lock.lock();
+    try {
+        count++;
+    } finally {
+        lock.unlock();
+    }
+}
+
+Requires manual unlocking in finally block to avoid deadlocks.
+
+Semaphore :
+
+Usage : A Semaphore is a synchronization mechanism that controls how many threads can access a resource at the same time.
+Unlike a lock, which usually allows only one thread, a semaphore allows N threads concurrently.
+
+Fairness control : Can be configured to be fair, meaning threads will get access in the order they requested it.
+No Reentrancy
+
+public class Example {
+
+    private static final Semaphore semaphore = new Semaphore(2);
+
+    public static void main(String[] args) {
+
+        Runnable task = () -> {
+            try {
+                semaphore.acquire();
+
+                System.out.println(
+                    Thread.currentThread().getName() + " acquired permit"
+                );
+
+                Thread.sleep(3000);
+
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } finally {
+                semaphore.release();
+                System.out.println(
+                    Thread.currentThread().getName() + " released permit"
+                );
+            }
+        };
+
+        for (int i = 1; i <= 5; i++) {
+            new Thread(task, "T" + i).start();
+        }
+    }
+}
+
+Only two threads can acquire a lock at a time
+
+T1 acquired permit
+T2 acquired permit
+
+(waiting...)
+
+T1 released permit
+T3 acquired permit
+
+T2 released permit
+T4 acquired permit
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+7) What is a dead lock?
+
+A deadlock is a situation in multi-threading where two or more threads are blocked forever, waiting for each other to release resources.
+
+ex :
+
+class DeadlockDemo {
+    static final Object lock1 = new Object();
+    static final Object lock2 = new Object();
+
+    public static void main(String[] args) {
+
+        Thread t1 = new Thread(() -> {
+            synchronized (lock1) {
+                System.out.println("Thread 1: holding lock1");
+
+                try { Thread.sleep(100); } catch (Exception e) {}
+
+                synchronized (lock2) {
+                    System.out.println("Thread 1: holding lock2");
+                }
+            }
+        });
+
+        Thread t2 = new Thread(() -> {
+            synchronized (lock2) {
+                System.out.println("Thread 2: holding lock2");
+
+                try { Thread.sleep(100); } catch (Exception e) {}
+
+                synchronized (lock1) {
+                    System.out.println("Thread 2: holding lock1");
+                }
+            }
+        });
+
+        t1.start();
+        t2.start();
+    }
+}
+
+In this example, Thread 1 holds lock1 and waits for lock2 and goes to BLOCKED state, while Thread 2 holds lock2 and waits for lock1 and goes to BLOCKED STATE, resulting in a deadlock.
+
+To Fix deadlocks :
+
+1. Avoid Nested Locks : Avoid acquiring multiple locks at the same time.
+2. Lock Ordering : Always acquire locks in a predefined order.
+
+// T1
+synchronized (lock1) {
+    synchronized (lock2) {
+    }
+}
+
+// T2
+synchronized (lock1) {
+    synchronized (lock2) {
+    }
+}
+
+
+3. Use tryLock() : Use Lock's tryLock() method to avoid waiting indefinitely for a lock.
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+8) What is a LiveLock?
+
+LiveLock occurs when two or more threads are unable to make progress because they keep responding to each other in a way that prevents them from proceeding.
+
+ex :
+
+class LivelockDemo {
+
+    static volatile boolean t1WantsToWork = true;
+    static volatile boolean t2WantsToWork = true;
+
+    public static void main(String[] args) {
+
+        Thread t1 = new Thread(() -> {
+            while (t2WantsToWork) {
+                System.out.println("T1: You go first...");
+                // backing off
+            }
+            System.out.println("T1: Doing work");
+        });
+
+        Thread t2 = new Thread(() -> {
+            while (t1WantsToWork) {
+                System.out.println("T2: No, YOU go first...");
+                // backing off
+            }
+            System.out.println("T2: Doing work");
+        });
+
+        t1.start();
+        t2.start();
+    }
+}
+
+Output keeps printing:
+
+T1: You go first...
+T2: No, YOU go first...
+T1: You go first...
+T2: No, YOU go first...
+
+
+Both Threads want to work
+T1 checks: while (t2WantsToWork) → TRUE
+So T1 backs off
+
+T2 checks: while (t1WantsToWork) → TRUE
+So T2 backs off
+
+Both keep checking
+Both keep looping
+Both are RUNNING
+CPU is busy
+Nobody does the work
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+9) Difference between process and thread ?
+
+Process : A process is an independent program in execution that has its own memory space, system resources, and execution context.
+Thread : A thread is a lightweight unit of execution within a process that shares the same memory space and resources of the process.
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+10) What happens if run() method is called without start() IN java threads ?
+
+start() method :
+
+1. whe we call start method on a thread object , it creates a new thread and calls the run() method in that new thread.
+2. The start() method is responsible for actual thread creation and scheduling by the JVM.
+
+run() method :
+1. If we call run() method directly on a thread object, it does not create a new thread.
+2. The run() method will be executed in the current thread (the thread that called the run() method) instead of a new thread,
+3. This means no new thread is created, run() method will execute like a normal method call
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+11) What is the use of a thread pool in Java ?
+
+A thread pool is a set of reusable threads that are kept ready to execute tasks instead of creating a new thread every time.
+reuse limited number of threads to execute many tasks efficiently
+
+You submit tasks
+An existing thread picks them up and runs them
+When done, the thread goes back to the pool for reuse
+
+Creating a thread is expensive:
+
+Memory allocation
+Stack creation
+Context switching overhead (CPU stops executing one thread/process and switches to another.)
+
+Java provides thread pools via ExecutorService
+
+ExecutorService executor = Executors.newFixedThreadPool(3);
+
+executor.submit(() -> {
+    System.out.println(Thread.currentThread().getName());
+});
+
+executor.shutdown();
+
+
+| Method          | Use                  |
+| --------------- | -------------------- |
+| `execute()`     | fire-and-forget task |
+| `submit()`      | returns Future       |
+| `shutdown()`    | graceful shutdown    |
+| `shutdownNow()` | immediate stop       |
+
+
+execute() vs submit()
+
+service.execute(task);
+
+Future<Integer> f = service.submit(task);
+
+Future Example :
+
+Future<Integer> future =
+    service.submit(() -> 10 + 20);
+
+System.out.println(future.get()); // 30
+
+Common Types of Thread Pools ->
+
+1. Fixed Thread Pool -> Executors.newFixedThreadPool(5) -> Fixed number of threads
+2. Cached Thread Pool -> Executors.newCachedThreadPool() -> Creates new threads as needed dynamically
+3. Single Thread Pool -> Executors.newSingleThreadExecutor() -> Single thread for all tasks
+4. Scheduled Thread Pool -> Executors.newScheduledThreadPool(5) -> Schedules tasks for future execution
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+12) What is illegal-monitor-state exception in java ?
+
+Owning the monitor -> A thread owns the monitor when it has entered a synchronized block or method.
+Releasing the monitor -> A thread releases the monitor when it exits the synchronized block or method.
+
+IllegalMonitorStateException -> Thrown when a thread attempts to call wait(), notify(), or notifyAll() on an object
+                                without owning the monitor for that object.
+
+
+wait() causes the current thread to release the object's monitor and enter the waiting state until another thread invokes notify(), notifyAll(), or the wait times out.
+
+ex :
+
+private final Object lock = new Object();
+
+public void someMethod() {
+    lock.wait(); // wait() is called without owning the monitor(not inside synchronized block) throws IllegalMonitorStateException
+}
+
+To fix :
+
+public void someMethod() {
+    synchronized (lock) {
+        lock.wait(); // OK
+    }
+}
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+13) What are atomic variables in Java ?
+
+Atomic variables are special variables provided by Java that support thread-safe, lock-free operations on a single variable.
+
+They ensure that the operations like increment, decrement and read-modify-write are performed atomically.
+ex : AtomicInteger, AtomicLong, AtomicBoolean, AtomicReference etc.
+
+common atomic operations like getAndIncrement(), compareAndSet(), getAndSet() etc.
+
+ex :
+AtomicInteger count = new AtomicInteger(0);
+count.incrementAndGet(); // thread-safe increment
+
+
+Performance issues with synchronized ->
+Traditional locking using synchronized is heavy weight
+multiple threads accessing a shared resource , if one thread is using the resource other threads have to wait in the queue
+this leads to context switching which is expensive (Context switching happens when the CPU stops executing one thread and starts executing another thread.)
+
+Atomic variables are lock-free and provides thread safety
+
+Multiple threads can cause race conditions by modifying shared resources simultaneously
+Atomic variables prevent race conditions by ensuring that only one thread can modify the value at a time.
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+14) 'Object' level locking / 'Class' level locking ?
+
+Object-level Locking -> it locks a particular instance of an object
+ex :
+Synchronized instance method
+
+class Counter {
+    synchronized void increment() {
+        // object-level lock
+    }
+}
+
+Synchronized block on this
+
+synchronized (this) {
+    // object-level lock
+}
+
+Counter c1 = new Counter();
+Counter c2 = new Counter();
+
+let's say we have 3 threads
+
+t1 -> c1.increment() -> lock on c1, runs
+t2 -> c2.increment() -> lock on c2, runs
+t3 -> c1.increment() -> lock on c1, blocked because t1 is already running
+
+
+Class-level Locking -> it locks the entire class
+ex :
+Synchronized static method
+
+class Counter {
+    static synchronized void reset() {
+        // class-level lock
+    }
+}
+
+Synchronized block on .class
+
+synchronized (Counter.class) {
+    // class-level lock
+}
+
+
+Counter c1 = new Counter();
+Counter c2 = new Counter();
+
+
+T1 -> c1.reset() -> lock on c1.reset(), runs
+T2 -> c2.reset() -> lock on Counter.reset(), blocked because T1 is already running
+
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+15) How would you ensure that a piece of code is executed by only one thread at a time ?
+
+    By using Synchronized , Lock interface, Atomic variables, semaphores
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+16) What is difference between executor's 'submit' and 'execute' method ?
+
+execute(Runnable task) -> It does not return any result
+                          It does not throw any checked exceptions
+
+submit(Runnable task) / submit(Callable<T> task) ->
+                          It returns a Future object which can be used to check the status of the task
+                          It throws checked exceptions
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+17) Is it 'safe to iterate over collection' returned by Collections. synchoronizedCollection() method or should we 'synchronize' the iterating code ?
+
+
+
+
+
+
+
+
+
+

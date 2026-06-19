@@ -82,4 +82,8 @@ class Employee {
     public double getSalary() {
         return salary;
     }
+
+    // 1. how many male and female employees are there?
+
 }
+

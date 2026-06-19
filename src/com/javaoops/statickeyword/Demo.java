@@ -1,6 +1,19 @@
 package com.javaoops.statickeyword;
 
 public class Demo {
+
+
+
+//    A class can load because of:
+//
+//    object creation (new)
+//    accessing static members
+//    calling static methods
+//    JVM starting with main class
+//    Class.forName()
+
+
+
     static int a,b,c;
     static {
         System.out.println("in static block");
@@ -39,3 +52,7 @@ public class Demo {
         d.disp1();
     }
 }
+
+
+
+

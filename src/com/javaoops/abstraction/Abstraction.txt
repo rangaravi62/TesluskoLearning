@@ -1,0 +1,82 @@
+----------------------------------
+Abstraction means:
+----------------------------------
+
+Showing only essential details and hiding implementation details.
+
+Java achieves abstraction using:
+
+Abstract classes
+Interfaces
+
+
+It may contain:
+
+abstract methods (without body)
+concrete methods (with body)
+variables
+constructors
+
+
+-----------------------
+Interface
+-----------------------
+
+
+Interface is a contract.
+
+It tells:
+
+“Any class implementing me MUST provide these behaviors.”
+
+
+
+
+8. Abstract Class vs Interface
+Feature                     	        Abstract Class	                     Interface
+Can have constructors	                    Yes	                                    No
+Can have instance variables	                Yes	                                    No(variables in interfaces are by default public static final)
+Multiple inheritance	                     No	                                    Yes
+Purpose	                          Common base + partial implementation	       Contract
+Methods	                            Abstract + concrete	                       Mostly abstract
+Access modifiers	                Any	Methods are public by default
+
+
+
+
+Why interfaces when abstract classes already exist?
+
+Because Java doesn't support multiple inheritance with classes.
+
+Example problem:
+
+Person
+Teacher
+Singer
+
+What if someone is both Teacher and Singer?
+
+Java cannot do:
+
+class A extends B, C // invalid
+
+Interfaces solve this.
+
+
+
+
+
+
+
+
+Abstraction----
+
+Hiding implementation details and exposing only essential behavior.
+
+Abstract Class----
+
+A partially implemented class used for common behavior sharing.
+
+Interface----
+
+A contract defining capabilities that implementing classes must provide.

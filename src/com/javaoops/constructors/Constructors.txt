@@ -27,3 +27,63 @@ public ThisAndSuper(int a, int b) {
         this.a = a;
         this.b = b;
 }
+
+
+
+Purpose of Constructor
+Object Initialization
+Code Reusability
+Ensures Default Value
+
+
+
+
+Types of Constructor:
+
+1. Non-parameterized Constructor
+
+class Employee {
+    // Non-parameterised constructor
+    Employee() {
+        System.out.println("Employee created!");
+    }
+ }
+
+
+2. Parameterized Constructor
+class Employee {
+    public String employeeName; // To store the name of the employee
+    public int salary;          // To store the salary of the employee
+
+    // Parameterized constructor
+    public Employee(String name, int salary) {
+        this.employeeName = name;
+        this.salary = salary;
+    }
+}
+
+3. Copy Constructor (Manual Implementation)
+
+class Employee {
+    public String employeeName; // To store the name of the employee
+    public int salary;          // To store the salary of the employee
+
+    // Parameterized constructor
+    public Employee(String name, int salary) {
+        this.employeeName = name;
+        this.salary = salary;
+    }
+
+    // Copy Constructor
+    public Employee(Employee employee) {
+        // Calling another constructor
+        this(employee.employeeName, employee.salary);
+    }
+}
+
+Employee obj = new Employee("Raj", 10000);
+
+// Creating a copy of obj using Copy constructor
+Employee objCopy = new Employee(obj);
+
+

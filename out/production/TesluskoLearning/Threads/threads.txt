@@ -98,6 +98,27 @@ Different thread states
     --- one can get the current state of a thread using the Thread.getState() method
 
 
+class Demo {
+    public static void main(String[] args) throws Exception {
+
+        Thread t = new Thread(() -> {
+            try {
+                Thread.sleep(2000);
+            } catch(Exception e) {}
+        });
+
+        System.out.println(t.getState()); // NEW
+
+        t.start();
+
+        System.out.println(t.getState()); // RUNNABLE or TIMED_WAITING
+
+        t.join();
+
+        System.out.println(t.getState()); // TERMINATED
+    }
+}
+
 -----------------------------
     Ways to create threads
 -----------------------------
@@ -209,3 +230,347 @@ setDaemon(boolean status)
 isDaemon()
 
 Note : Note: If you want to make a user thread as Daemon, it must not be started otherwise it will throw IllegalThreadStateException.
+
+
+A daemon thread in Java is a background thread that supports other threads.
+
+JVM does not wait for daemon threads to finish.
+
+When all user threads finish, JVM exits immediately — even if daemon threads are still running.
+
+
+
+Daemon threads are NOT guaranteed cleanup
+
+Because JVM can stop them anytime.
+
+So avoid:
+
+DB transactions
+file writing
+important business logic
+
+inside daemon threads.
+
+----------------------------------------------------
+
+
+class Employee {
+
+    static String company = "Google"; // Method Area
+
+    int id; // Heap
+    String name; // Heap
+
+    public Employee(int id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
+    void display() {
+
+        int bonus = 5000; // Stack
+
+        System.out.println(
+            id + " " + name + " " + company + " " + bonus
+        );
+    }
+
+    public static void main(String[] args) {
+
+        Employee e1 = new Employee(1, "Ravi");
+        Employee e2 = new Employee(2, "Teja");
+
+        e1.display();
+        e2.display();
+    }
+}
+
+
+
+
+1. Method Area (Shared)
+
+Method Area stores:
+
+class metadata
+static variables
+bytecode
+method information
+
+
+
+Heap stores:
+
+objects
+instance variables
+
+
+
+3. Stack Memory (Per Thread)
+
+Each thread gets its own stack.
+
+Stack stores:
+
+method calls
+local variables
+references
+
+
+-----------------------------------
+Program Counter Register
+-----------------------------------
+
+
+What is PC Register?
+
+The Program Counter Register stores:
+
+the address of the current instruction being executed by a thread.
+
+In simple words:
+
+"Which line/instruction should this thread execute next?"
+
+
+
+---------------------------------------------
+synchronized block
+---------------------------------------------
+
+
+Every Java object has an internal monitor lock
+
+Object lock1 = new Object();
+Object lock2 = new Object();
+
+internally
+
+lock1 + monitor
+lock2 + monitor
+
+Think of monitor like a room key.
+Only ONE thread can hold a monitor at a time.
+
+if one thread has acquired the monitor of lock1 other threads cannot acquire the monitor of lock1 until the thread releases the monitor of lock1.
+
+
+
+
+in java, Class itself is also an object -> MyClass.class returns a special object of type: Class
+Internally JVM creates one class object per loaded class.
+That object lives in heap/metaspace-related structures.
+
+Static synchronized Uses This Lock
+
+static synchronized void test() {
+
+}
+
+this is equalent to
+
+void test() {
+
+    synchronized(Demo.class) {
+
+    }
+}
+
+synchronized(this)	                    instance object
+synchronized(Demo.class)	            class object
+
+
+
+
+-------------------------------------------------------------------------------------------------------------
+
+Reentrant locking
+
+In Java, reentrant locking means that if a thread already holds a lock, it can acquire the same lock again without blocking.
+
+1. synchronized is reentrant
+
+class Example {
+
+    public synchronized void methodA() {
+        System.out.println("Inside methodA");
+        methodB(); // acquires the same lock again
+    }
+
+    public synchronized void methodB() {
+        System.out.println("Inside methodB");
+    }
+}
+
+When a thread enters methodA(), it acquires the lock on the object (this).
+
+When it calls methodB(), Java sees that the same thread already owns the lock, so it allows entry instead of blocking.
+
+Without reentrancy, this would deadlock.
+
+
+2. ReentrantLock
+
+Java also provides the explicit lock class:
+
+import java.util.concurrent.locks.ReentrantLock;
+
+public class Example {
+
+    private final ReentrantLock lock = new ReentrantLock();
+
+    public void methodA() {
+        lock.lock();
+        try {
+            System.out.println("methodA");
+            methodB();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public void methodB() {
+        lock.lock();
+        try {
+            System.out.println("methodB");
+        } finally {
+            lock.unlock();
+        }
+    }
+}
+
+methodA() acquires the lock.
+methodB() acquires the same lock again.
+The lock keeps a hold count.
+
+
+
+Hold Count Example
+
+ReentrantLock lock = new ReentrantLock();
+
+lock.lock();  // hold count = 1
+lock.lock();  // hold count = 2
+
+lock.unlock(); // hold count = 1
+lock.unlock(); // hold count = 0 (released)
+
+The lock is available to other threads only when the hold count reaches 0.
+
+
+ReentrantLock lock = new ReentrantLock(true);
+
+this enables fairness
+
+Fair Lock
+A fair lock grants access to threads in roughly the order they requested it (FIFO).
+
+
+-------------------------------------------------------------------------
+
+SEMAPHORE
+
+A Semaphore is a synchronization mechanism that controls how many threads can access a resource at the same time.
+
+Unlike a lock, which usually allows only one thread, a semaphore allows N threads concurrently.
+No reentrancy
+
+Analogy: Parking Lot
+
+Imagine a parking lot with 3 parking spaces.
+
+Semaphore permits = 3
+A car must acquire a permit before entering.
+When a car leaves, it releases the permit.
+Permits = 3
+
+Car A enters → permits = 2
+Car B enters → permits = 1
+Car C enters → permits = 0
+
+Car D arrives → waits
+
+Car A leaves → permits = 1
+Car D enters → permits = 0
+
+
+Example :
+
+import java.util.concurrent.Semaphore;
+
+
+public class Example {
+
+    private static final Semaphore semaphore = new Semaphore(2);
+
+    public static void main(String[] args) {
+
+        Runnable task = () -> {
+            try {
+                semaphore.acquire();
+
+                System.out.println(
+                    Thread.currentThread().getName() + " acquired permit"
+                );
+
+                Thread.sleep(3000);
+
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } finally {
+                semaphore.release();
+                System.out.println(
+                    Thread.currentThread().getName() + " released permit"
+                );
+            }
+        };
+
+        for (int i = 1; i <= 5; i++) {
+            new Thread(task, "T" + i).start();
+        }
+    }
+}
+
+T1 acquired permit
+T2 acquired permit
+
+(waiting...)
+
+T1 released permit
+T3 acquired permit
+
+T2 released permit
+T4 acquired permit
+
+Only 2 threads can execute the critical section simultaneously.
+
+Important Methods
+
+1.Acquire a permit
+semaphore.acquire();
+
+Blocks until a permit is available.
+
+
+2. Release a permit
+   semaphore.release();
+
+   Returns the permit.
+
+3.Available permits
+  int count = semaphore.availablePermits();
+
+Fair Semaphore
+
+Just like ReentrantLock:
+
+Semaphore semaphore = new Semaphore(3, true);
+true → fair (FIFO)
+false → non-fair (default)
+
+
+Binary Semaphore
+
+A semaphore with 1 permit:
+Semaphore semaphore = new Semaphore(1);

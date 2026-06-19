@@ -13,6 +13,29 @@ static block will be loaded while class loader loads the class
 the purpose of static blocks is to initialize the static variables
 if there are any lines to be executed during class loading then those can be given in static blocks
 
+
+class metadata → stored in Metaspace
+static variables → stored in heap memory associated with the Class object
+
+the JVM stores metadata like:
+
+Class name → Employee
+Parent class → Object
+Methods → work()
+Method bytecode
+Fields → companyId, empId
+Access modifiers → public, private, static, etc.
+Runtime constant pool
+Constructor info
+Interface information
+Annotations
+
+This information is called class METADATA.
+
+
+
+
+
 ex :
 static {
         System.out.println("in static block");

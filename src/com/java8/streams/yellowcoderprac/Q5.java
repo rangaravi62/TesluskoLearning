@@ -8,6 +8,10 @@ public class Q5 {
         System.out.println(findSpecialCharacters(str));
     }
 
+//    mapToObj()
+//    Used when converting:
+//    primitive stream → object stream
+
     static String findSpecialCharacters (String str) {
         return str.chars().filter(c -> !Character.isLetterOrDigit(c)).mapToObj(c -> String.valueOf((char)c)).collect(Collectors.joining(" "));
     }

@@ -1,4 +1,19 @@
 OOPs (Object-Oriented Programming)
 
+Class: A class is a blueprint or template that defines the properties (attributes) and behaviors (methods) common to all objects of its type.
+Object: An object is an instance of a class, representing a specific entity with its own unique state (attribute values) and behavior.
 
 Object means a real-world entity such as a pen, chair, table, computer, watch, etc.
+
+// Stack allocation
+Employee obj1; //var will be stored in stack, this will the have the reference to the obj which is present in the heap
+
+// Heap allocation
+Employee obj1 = new Employee(); // object will be created in the heap
+
+once the execution completes the garbage collector will delete it from the heap memory
+
+
+Attributes (also called properties or fields) are the data or characteristics of an object.
+Methods are functions that are defined inside a class and represent the behavior or actions that an object of the class can perform
+

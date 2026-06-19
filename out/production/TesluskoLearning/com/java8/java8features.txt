@@ -342,3 +342,14 @@ ScriptEngineManager manager = new ScriptEngineManager();
 
 
 
+
+-----------------------
+mapToObj()
+-----------------------
+
+Used when converting:
+
+primitive stream → object stream
+
+
+
