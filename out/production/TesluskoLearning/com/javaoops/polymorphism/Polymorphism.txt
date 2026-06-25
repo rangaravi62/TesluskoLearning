@@ -1,0 +1,34 @@
+Polymorphism
+---------------------------
+
+Polymorphism is one of the key concepts in object-oriented programming (OOP) and refers to the ability of a single entity (like a method, operator, or object)
+to behave differently in different contexts. The term “polymorphism” is derived from Greek, meaning “many forms.”
+
+
+There are two main types of polymorphism in Java:
+
+Compile-Time Polymorphism (Static Polymorphism)
+Run-Time Polymorphism (Dynamic Polymorphism)
+
+
+1. Compile-Time Polymorphism (Static Polymorphism) -> Method overloading
+
+In compile-time polymorphism, the method to be called is resolved at compile time.
+When we say the method is "resolved" at compile-time, it means that the compiler determines the correct method to
+invoke based on the method's signature (such as method name, parameters, etc.). It is achieved through method overloading.
+
+Determined at compile-time.
+Faster execution since the binding is done early.
+
+Note that the return type cannot be a differentiator for Method Overloading.
+
+
+2. Run-Time Polymorphism (Dynamic Polymorphism) -> Method Overriding
+
+In run-time polymorphism, the method is resolved during the runtime. It is achieved through method overriding.
+When we say the method is "resolved" at run-time, it refers to the decision about which method (in the case of method overriding)
+to call being made at the time the program is actually running. This occurs due to the dynamic method dispatch mechanism,
+where the JVM decides which method of a subclass to call based on the actual object type (not the reference type) at runtime.
+
+Determined at runtime.
+Slower execution compared to compile-time polymorphism due to late binding.

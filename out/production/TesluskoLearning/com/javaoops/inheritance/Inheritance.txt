@@ -1,0 +1,55 @@
+Inheritance
+-----------------------------
+
+Inheritance is a fundamental concept in object-oriented programming (OOP) that allows a class (subclass) to inherit the attributes (fields) and behaviors (methods)
+of another class (superclass).
+
+
+Types of Inheritance:
+Single Inheritance
+Multilevel Inheritance
+Hierarchical Inheritance
+
+1. Single Inheritance
+In Single Inheritance, a child class inherits from one parent class.
+In a single inheritance, a one-to-one relationship is established.
+The child class inherits methods and properties from a single parent class.
+
+
+2. Multilevel Inheritance
+In Multilevel Inheritance, a class derives from a child class, creating a chain of inheritance.
+    Here, the child class of one level becomes the parent class for the next level.
+In a multilevel inheritance, a one-to-one-to-one relationship across multiple levels is established.
+Each child class inherits from its immediate parent, and the chain continues.
+
+
+3. Hierarchical Inheritance
+In Hierarchical Inheritance, multiple child classes inherit from a single parent class.
+In a hierarchical inheritance, a one-to-many relationship is established between classes.
+
+
+
+
+Multiple Inheritance:
+----------------------------
+
+Multiple inheritance refers to a feature in object-oriented programming where a class can inherit properties and methods from more than one parent class.
+This allows the child class to combine the functionality of multiple parent classes.
+
+
+Diamond Problem:
+Diamond Problem occurs when a class inherits from two classes that have methods with the same name. The compiler cannot determine which method to execute.
+
+ex: class A, class B extends A, class C extends A, Class D extends B,C -> this is not possible
+
+If both B and C inherit from A and override a method, and D inherits from both B and C, which version of the method should D inherit?
+This ambiguity is why Java restricts multiple inheritance for classes.
+
+
+Note that Java does not allow multiple inheritance using classes to avoid the diamond problem, it allows multiple inheritance through interfaces,
+as interfaces only declare method signatures (no method bodies initially), thus preventing conflicts.
+
+
+
+
+

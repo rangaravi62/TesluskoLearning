@@ -2,35 +2,69 @@
 Abstraction means:
 ----------------------------------
 
-Showing only essential details and hiding implementation details.
+Process of hiding implementation details and showing only essential details.
+
+For example, when you drive a car, you use the steering wheel, accelerator, and brake without knowing how the engine internally works.
+
 
 Java achieves abstraction using:
 
 Abstract classes
 Interfaces
 
+---------------------------
+Abstract classes
+---------------------------
+An abstract class is a class that cannot be instantiated and may contain both abstract and concrete methods.
 
-It may contain:
+can have abstract methods (without body) and concrete methods (with body)
+can have instance variables and constructors
+A class can extend only one abstract class.
 
-abstract methods (without body)
-concrete methods (with body)
-variables
-constructors
+abstract class Animal {
+    String name;                    // state (fields)
 
+    Animal(String name) {           // constructor
+        this.name = name;
+    }
+
+    abstract void makeSound();      // contract — subclasses MUST implement
+
+    void breathe() {                // shared behavior — inherited as-is
+        System.out.println("Inhale... exhale...");
+    }
+}
+
+class Dog extends Animal {
+    Dog(String name) { super(name); }
+
+    @Override
+    void makeSound() { System.out.println("Woof!"); }
+}
 
 -----------------------
 Interface
 -----------------------
-
-
-Interface is a contract.
+An interface defines a contract that implementing classes must follow.
 
 It tells:
-
 “Any class implementing me MUST provide these behaviors.”
 
+Methods are public and abstract by default (except default/static methods).
+Variables are public static final.
+No constructors or instance variables.
+A class can implement multiple interfaces.
 
 
+interface Flyable {
+    void fly();
+}
+
+class Bird implements Flyable { }
+
+class Airplane implements Flyable { }
+
+------------------------------------------------------------------------------------------------------------------------
 
 8. Abstract Class vs Interface
 Feature                     	        Abstract Class	                     Interface
@@ -43,6 +77,38 @@ Access modifiers	                Any	Methods are public by default
 
 
 
+------------------------------------------
+When to use which
+------------------------------------------
+
+use an abstract class when multiple classes are closely related and share common state or behavior and code reuse is needed.
+There is an "is-a" relationship.
+
+
+use interfaces when you want to define a capability or contract
+when Unrelated classes need the same capability/functionality (Bird and Airplane both Flyable)
+Multiple inheritance is required.
+You want loose coupling
+
+
+
+The Core Mental Model
+Question                    Abstract                                    ClassInterface
+Relationship                "is-a" (same family)                        "can-do" (capability)
+Purpose                 Share code among related types              Define a contract across unrelated types
+State                       ✅ Has fields                                ❌ No instance state
+Constructor                     ✅ Yes                                           ❌ No
+Multiple inheritance           ❌ One only                                       ✅ Many
+Access modifiers                Any                                         Public (mostly)
+
+---------------------------------------------
+
+Why default methods
+
+Default methods were introduced in Java 8 primarily for backward compatibility.
+They allow new methods to be added to interfaces without breaking existing implementing classes
+
+------------------------------------------------
 
 Why interfaces when abstract classes already exist?
 
@@ -64,7 +130,7 @@ Interfaces solve this.
 
 
 
-
+-----------------------------------------------
 
 
 

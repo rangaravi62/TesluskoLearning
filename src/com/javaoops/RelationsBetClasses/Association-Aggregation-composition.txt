@@ -1,0 +1,86 @@
+Relationships between classes can be categorized into three major types:
+
+Association: A general relationship where one class interacts with another.
+Aggregation: A specialized form of association that represents a "has-a" relationship with a weaker bond.
+Composition: A more restrictive form of aggregation where the lifecycle of the related objects is tightly coupled.
+
+
+
+1. Association
+
+One-to-One:
+One instance of a class is associated with exactly one instance of another class.
+For example, a Person class might have a one-to-one relationship with a Passport class.
+
+One-to-Many:
+One instance of a class is associated with multiple instances of another class.
+For instance, a Teacher class may be associated with multiple Student objects.
+
+Many-to-Many:
+Many instances of a class are associated with many instances of another class.
+For example, a Student class might be associated with multiple Course objects, and each Course object can have multiple Students.
+
+
+
+2. Aggregation ("Has-A" — weak)
+
+
+It represents a "whole-part" relationship where the "whole" and "part" can exist independently.
+For example, a Department class may contain multiple Employee objects, but the employees can exist independently of the department.
+
+
+ex:
+
+// Department Class
+class Department {
+    private List<Employee> employees;
+
+    public Department(List<Employee> employees) {
+        this.employees = employees;
+    }
+}
+
+// Employee Class
+class Employee {
+    private String name;
+
+    public Employee(String name) {
+        this.name = name;
+    }
+}
+
+
+In this example, Employee objects are aggregated into a Department object.
+Even if the Department object is deleted, the Employee objects can continue to exist.
+
+
+3. Composition ("Has-A" — strong)
+
+
+Composition is a stricter form of aggregation where the "whole" and "part" are tightly coupled.
+If the "whole" is destroyed, the "parts" are also destroyed. This represents a "part-of" relationship.
+For example, a House class might contain multiple Room objects. If the House is destroyed, the Room objects cease to exist.
+
+ex:
+
+class House {
+    private List<Room> rooms;
+
+    public House() {
+        rooms = new ArrayList<>();
+        rooms.add(new Room("Living Room"));
+        rooms.add(new Room("Bedroom"));
+    }
+}
+
+class Room {
+    private String name;
+
+    public Room(String name) {
+        this.name = name;
+    }
+}
+
+
+Here, Room objects are part of the House object. If the House is destroyed, the Room objects are also destroyed.
+Stronger Bond: The relationship is tightly coupled.

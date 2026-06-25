@@ -1,0 +1,18 @@
+Types of Access Modifiers
+Most of the Object Oriented Progamming languages provide the following four access levels:
+
+Public: Accessible everywhere (within the same class, same package, and outside the package).
+Private: Accessible only within the class where it is declared.
+Protected: Accessible within the same package and by subclasses in other packages.
+Default: (No Modifier) Accessible within the same package (package-private).
+
+
+
+
+Access  Modifier	        Class	    Package	        Subclass	    World
+Public	                     ✔️	           ✔️	           ✔️	          ✔️
+Protected	                 ✔️	           ✔️	           ✔️	          ❌
+Default	                     ✔️	           ✔️	           ❌	          ❌
+Private                 	 ✔️	           ❌	           ❌	          ❌
+
+
