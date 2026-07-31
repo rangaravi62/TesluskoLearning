@@ -20,3 +20,20 @@ The clone() method is defined in the Object class. By default, it performs a sha
 Allocates a new memory location for the cloned object.
 Copies the field values (primitives are copied, references are copied but not the objects they refer to).
 
+
+-----------------------------
+Shallow Cloning
+-----------------------------
+
+Shallow copy means primitive fields are copied by value,
+but reference fields (like address) still point to the same object.
+
+
+-----------------------------
+Deep Cloning
+-----------------------------
+
+Deep cloning ensures that a completely independent copy of the object is created, including all nested objects
+
+Since the default clone() method performs a shallow copy, deep cloning requires manual cloning of all referenced objects.
+This can be done using the clone() method recursively.

@@ -1,0 +1,663 @@
+Logical order of execution
+--------------------------------------------------
+
+FROM -> WHERE -> GROUPBY -> HAVING -> WINDOW FUNCTIONS -> SELECT -> ORDERBY
+
+WHERE filters the individual rows before grouping and aggregation
+Having filters the grouped results after groupby and aggregate functions are applied
+
+-------------------------------------------------------------------------
+Diff between count(*) vs count(1) vs count(col) vs count(DISTINCT col)
+-------------------------------------------------------------------------
+
+count(*) and count(1) both are same -> counts rows including null values
+count(col) -> counts non null values
+count(DISTINCT col) -> counts distinct non null values
+
+
+--------------------------------------------------------------------------
+INNER JOIN, LEFT JOIN, RIGHT JOIN, and FULL OUTER JOIN
+--------------------------------------------------------------------------
+
+INNER JOIN returns only rows that have matching values in both tables.
+LEFT JOIN returns all rows from the left table and matching rows from the right table. If no match exists,
+right-table columns become NULL.
+RIGHT JOIN returns all rows from the right table and matching rows from the left table. If no match exists,
+left-table columns become NULL.
+FULL OUTER JOIN returns all matching and non-matching rows from both tables. Missing-side columns become NULL.
+
+
+-----------------------------------------------------------------------------------------------------------------------------------
+What is the difference between putting a condition in the ON clause and putting it in the WHERE clause for a LEFT JOIN?
+-----------------------------------------------------------------------------------------------------------------------------------
+
+SELECT e.name, d.name
+FROM employee e
+LEFT JOIN department d
+    ON e.department_id = d.id
+   AND d.location = 'Bangalore';
+
+vs
+
+SELECT e.name, d.name
+FROM employee e
+LEFT JOIN department d
+    ON e.department_id = d.id
+   AND d.location = 'Bangalore';
+
+
+In the first query the cond is inside ON clause
+This still keeps all employees. For employees whose department is not in Bangalore, the department columns become NULL.
+
+In the second query, The WHERE condition removes rows where d.location is NULL or not Bangalore.
+So the LEFT JOIN effectively behaves like an INNER JOIN.
+
+
+Conditions in the ON clause control which rows match during the join.
+Conditions in the WHERE clause filter the final joined result.
+
+
+-------------------------------------------------------
+SELF JOIN
+-------------------------------------------------------
+
+A self join means joining a table with itself.
+
+It is useful when rows in the same table are related to other rows in that table.
+
+
+| id | name  | manager_id |
+| -: | ----- | ---------: |
+|  1 | Ravi  |          3 |
+|  2 | Anu   |          3 |
+|  3 | Meena |       NULL |
+
+
+SELECT
+    e.name AS employee_name,
+    m.name AS manager_name
+FROM employee e
+LEFT JOIN employee m
+    ON e.manager_id = m.id;
+
+e represents the employee.
+m represents the manager.
+
+| employee_name | manager_name |
+| ------------- | ------------ |
+| Ravi          | Meena        |
+| Anu           | Meena        |
+| Meena         | NULL         |
+
+
+----------------------------------------
+Cross join
+----------------------------------------
+
+A cross join returns every possible combination of rows.
+
+If table A has 3 rows and table B has 4 rows, the result has:
+3 × 4 = 12 rows
+
+
+----------------------------------------------
+SUB QUERIES
+----------------------------------------------
+
+A subquery is a query written inside another SQL query.
+The inner query executes first, and its result is used by the outer query.
+
+SELECT name
+FROM employee
+WHERE salary > (
+    SELECT AVG(salary)
+    FROM employee
+);
+
+here the inner query is SELECT AVG(salary) FROM employee
+
+
+TYPES OF SUB QUERIES ->
+
+1. Scalar subquery
+
+Return exactly only one value
+
+SELECT name
+FROM employee
+WHERE salary = (
+    SELECT MAX(salary)
+    FROM employee
+);
+
+Use operators such as >,<,>=,<=,=
+
+2. Multi-row subquery
+
+Returns multiple values.
+
+SELECT name
+FROM employee
+WHERE department_id IN (
+    SELECT id
+    FROM department
+    WHERE location = 'Bangalore'
+);
+
+Use operators such as IN, ANY, ALL
+
+3. Subquery in FROM
+
+A subquery inside FROM creates a temporary derived table.
+
+SELECT department_id, avg_salary
+FROM (
+    SELECT department_id, AVG(salary) AS avg_salary
+    FROM employee
+    GROUP BY department_id
+) department_summary
+WHERE avg_salary > 60000;
+
+The derived table must usually have an alias, here: department_summary
+
+
+4. Subquery in SELECT
+
+SELECT
+    e.name,
+    e.salary,
+    (SELECT AVG(salary) FROM employee) AS company_average
+FROM employee e;
+
+The same company average is displayed alongside each employee.
+
+
+TODO : correlated sub queries-----
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+----------------------------------------------------------------------
+IN VS EXISTS
+----------------------------------------------------------------------
+
+IN ->
+
+IN checks whether a value is present in a list of values returned by a subquery.
+
+ex :
+
+SELECT name
+FROM employee
+WHERE department_id IN (
+    SELECT id
+    FROM department
+    WHERE location = 'Bangalore'
+);
+
+WHERE department_id IN (10, 20, 30)
+
+Use IN when:
+
+The subquery returns a list of values.
+The list is relatively small.
+
+
+
+EXISTS ->
+
+EXISTS checks whether the subquery returns at least one row.
+
+ex:
+
+SELECT e.name
+FROM employee e
+WHERE EXISTS (
+    SELECT 1
+    FROM department d
+    WHERE d.id = e.department_id
+      AND d.location = 'Bangalore'
+);
+
+The database only checks whether a matching row exists.
+Usually used with correlated sub queries
+
+IN is generally suitable for a small set of values, while EXISTS is often preferred when checking
+existence against a large related table because it can stop after finding the first match.
+
+
+
+
+---------------------------------------------------------
+GROUP BY, aggregate functions, and HAVING
+---------------------------------------------------------
+
+GROUP BY ->
+
+GROUP BY combines rows that have the same value into groups.
+
+Generally use with Aggregate Functions
+SUM(),AVG(),COUNT(),MIN(),MAX()
+
+ex : Count employees in each department
+
+select department_id, count(*) as emp_count from employees group by department_id
+
+Other aggregate examples
+
+Average salary per department ->
+
+SELECT department_id, AVG(salary) AS average_salary
+FROM employee
+GROUP BY department_id;
+
+
+Highest salary per department ->
+
+SELECT department_id, MAX(salary) AS highest_salary
+FROM employee
+GROUP BY department_id;
+
+Total salary per department ->
+
+SELECT department_id, SUM(salary) AS total_salary
+FROM employee
+GROUP BY department_id;
+
+
+Important GROUP BY rule-----------------------
+
+When using GROUP BY, every selected column must generally be either:
+
+Present in the GROUP BY
+Used inside an aggregate function
+
+
+
+------------------------------
+WHERE vs HAVING
+------------------------------
+
+WHERE filters individual rows before grouping.
+
+HAVING filters groups after aggregation.
+
+ex:
+
+SELECT department_id, COUNT(*) AS employee_count
+FROM employee
+WHERE salary > 50000
+GROUP BY department_id
+HAVING COUNT(*) > 2;
+
+Find departments whose average salary is greater than 60000.
+
+select department_id,AVG(salary) as avg_salary from employees group by department_id having avg_salary > 60000
+
+
+
+----------------------------------------------------------------
+Window functions
+----------------------------------------------------------------
+
+A window function performs a calculation across related rows without combining them into one row.
+
+
+GROUP BY collapses multiple rows into one row per group.
+Window functions calculate across a group while preserving every original row.
+
+function() OVER (
+    PARTITION BY column
+    ORDER BY column
+)
+
+
+ex:
+
+SELECT
+    employee,
+    department,
+    salary,
+    AVG(salary) OVER (
+        PARTITION BY department
+    ) AS department_average
+FROM employee;
+
+PARTITION BY creates logical groups.
+ORDER BY determines the order inside each group.
+OVER indicates that it is a window function.
+
+
+--------------------------------------------------------------
+ROW_NUMBER(), RANK(), and DENSE_RANK()
+--------------------------------------------------------------
+
+
+Ex:
+
+| employee | department | salary |
+| -------- | ---------- | -----: |
+| Ravi     | IT         | 90,000 |
+| Anu      | IT         | 80,000 |
+| Kiran    | IT         | 80,000 |
+| Priya    | IT         | 70,000 |
+
+
+SELECT
+    employee,
+    salary,
+    ROW_NUMBER() OVER (ORDER BY salary DESC) AS row_num,
+    RANK() OVER (ORDER BY salary DESC) AS rank_num,
+    DENSE_RANK() OVER (ORDER BY salary DESC) AS dense_rank_num
+FROM employee;
+
+Result :
+
+| employee | salary | ROW_NUMBER | RANK | DENSE_RANK |
+| -------- | -----: | ---------: | ---: | ---------: |
+| Ravi     | 90,000 |          1 |    1 |          1 |
+| Anu      | 80,000 |          2 |    2 |          2 |
+| Kiran    | 80,000 |          3 |    2 |          2 |
+| Priya    | 70,000 |          4 |    4 |          3 |
+
+ROW_NUMBER -> Assigns a unique sequence number to every row.
+RANK -> Rows with the same value receive the same rank, but the next rank is skipped.
+DENSE_RANK -> Rows with the same value receive the same rank, and no rank is skipped.
+
+
+Second-highest distinct salary ->
+
+select employee,salary from (
+select employee,salary, DENSE_RANK() as rank over
+(order by salary desc) from employees) ranked where rank = 2
+
+
+Top three salaries per department ->
+
+select employee,salary from (
+select employee,salary, DENSE_RANK() over (partition by department order by salary desc) as rank from employees) ranked
+where rank<=3
+
+
+NOTE ----------> Window functions cannot usually be filtered directly in WHERE because WHERE runs before the window function is calculated.
+
+SELECT employee,
+       department,
+       salary,
+       ROW_NUMBER() OVER (
+           PARTITION BY department
+           ORDER BY salary DESC
+       ) AS rn
+FROM employee
+WHERE rn = 1;
+
+this fails because where runs before the window function, rn column doesn't exist yet
+
+Execution Order
+
+1. FROM
+2. WHERE
+3. GROUP BY
+4. HAVING
+5. Window functions
+6. SELECT
+7. ORDER BY
+
+We need to use a subquery or CTE
+
+-----------------------------------
+CTE (COMMON TABLE EXPRESSION)
+-----------------------------------
+
+A CTE, or Common Table Expression, is a named temporary result set used within one SQL statement.
+
+Ex:
+
+WITH ranked_employees AS (
+    SELECT
+        employee_name,
+        salary,
+        DENSE_RANK() OVER (
+            ORDER BY salary DESC
+        ) AS salary_rank
+    FROM employee
+)
+SELECT employee_name, salary
+FROM ranked_employees
+WHERE salary_rank = 2;
+
+
+Advantages :
+
+Improves Readability
+Breaks a complex query into logical steps
+Can be referenced multiple times in some queries
+
+
+----------------------------------------------------------------
+Indexes
+----------------------------------------------------------------
+
+An index is a data structure that helps the database find rows faster without scanning the entire table.
+
+Think of it like a book index:
+
+Without an index, you read every page.
+With an index, you jump directly to the relevant page.
+
+Ex : SELECT *
+     FROM employee
+     WHERE employee_id = 100;
+
+If employee_id is indexed, the database can locate the row faster.
+
+Without an index The database may perform a full table scan, Time complexity is roughly proportional to the number of rows.
+
+With an index, The database searches the index and finds the matching row location.
+Most relational databases commonly use a B-tree index, which supports:
+
+
+Index creation :
+CREATE INDEX idx_employee_department
+ON employee(department_id);
+
+Benefits ->
+
+Indexes improve:
+WHERE filtering
+Join conditions
+Sorting
+Grouping in some cases
+
+Costs ->
+
+Indexes are not free.
+They require:
+
+Additional disk space
+Extra maintenance during INSERT
+Extra maintenance during UPDATE
+Extra maintenance during DELETE
+
+
+Usually index columns that are frequently used in WHERE, JOIN, ORDER BY, GROUP BY
+
+--------------------------
+Composite indexes
+--------------------------
+
+A composite index contains multiple columns.
+
+CREATE INDEX idx_emp_dept_salary
+ON employee(department_id, salary);
+
+The order matters
+
+This index works well for:
+
+WHERE department_id = 10 and
+
+WHERE department_id = 10
+  AND salary > 50000
+
+but may not be useful for
+
+WHERE salary > 50000
+because department_id is the first indexed column.
+
+This is called the LEFTMOST-PREFIX rule
+
+
+---------------------------------------
+Clustered vs non-clustered indexes
+---------------------------------------
+
+Clustered Index
+
+A clustered index determines how the table rows are physically organized at the leaf level.
+For a clustered index, the leaf pages contain the actual row data.
+Because table rows can be physically organized only one way, a table generally has only one clustered index.
+
+Non-clustered index
+
+A non-clustered index is a separate structure from the table.
+it stores indexed value → row locator
+
+The database first searches the non-clustered index, then uses the locator to fetch the complete row.
+A table can have multiple non-clustered indexes because they are separate structures.
+
+| Clustered index                | Non-clustered index                        |
+| ------------------------------ | ------------------------------------------ |
+| Leaf level contains table rows | Leaf level contains keys and row locators  |
+| Defines row organization       | Separate structure from table              |
+| Usually one per table          | Multiple can exist                         |
+| Good for range scans           | Good for different search columns          |
+| Often used for primary key     | Often added for frequently queried columns |
+
+
+-----------------------------
+Covering index
+-----------------------------
+
+A covering index contains all columns required by a query.
+
+ex :
+
+CREATE INDEX idx_emp_dept_salary_name
+ON employee(department_id, salary, employee_name);
+
+SELECT employee_name, salary
+FROM employee
+WHERE department_id = 10;
+
+The database may answer this query using only the index, without accessing the main table.
+This is often called an index-only scan.
+
+
+--------------------------------------------------------------
+Execution plan and query optimization
+--------------------------------------------------------------
+
+An execution plan shows how the database intends to execute a query.
+
+It may reveal:
+
+Full table scan
+Index scan
+Index seek
+Join type
+Sort operation
+Estimated rows
+Relative cost
+
+EX:
+
+EXPLAIN
+SELECT *
+FROM employee
+WHERE employee_id = 77;
+
+EXPLAIN -> EXPLAIN usually shows the estimated plan.
+EXPLAIN ANALYSE -> EXPLAIN ANALYZE actually executes the query and shows real execution statistics, so use it carefully on expensive queries.
+
+-------------------------------------------
+Common query-optimization techniques
+-------------------------------------------
+
+Avoid functions on indexed columns ----------->
+
+Suppose created_date is indexed.
+
+WHERE YEAR(created_date) = 2026
+The database may have to calculate YEAR() for many rows.
+
+Better:
+WHERE created_date >= '2026-01-01'
+  AND created_date <  '2027-01-01'
+
+
+Avoid unnecessary columns ----------->
+
+Less efficient:
+SELECT *
+FROM employee
+WHERE department_id = 10;
+
+Better:
+SELECT employee_id, employee_name
+FROM employee
+WHERE department_id = 10;
+
+This reduces data transfer and may allow a covering index.
+
+
+Avoid leading wildcards ------------>
+
+May not efficiently use a normal B-tree index:
+WHERE employee_name LIKE '%avi'
+
+More index-friendly:
+WHERE employee_name LIKE 'Ravi%'
+
+A B-tree can navigate using the known starting prefix.
+
+
+Check data types in comparisons ----------------->
+
+Avoid comparing different data types:
+
+WHERE employee_id = '77'
+
+when employee_id is numeric.
+Implicit conversion may affect index usage and adds processing.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

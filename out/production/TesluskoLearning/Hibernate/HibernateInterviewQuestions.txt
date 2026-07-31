@@ -1,0 +1,148 @@
+1. What is Hibernate?
+------------------------
+Hibernate is a ORM framework, ORM stands for Object Relational mapping which maps java objects to database tables
+
+Advantages:
+Reduces JDBC boiler plate code
+Supports lazy loading.
+Provides automatic table mapping.
+Provides transaction management.
+Supports HQL and Criteria API.
+
+-----------------------------------
+2. Hibernate Architecture
+-----------------------------------
+
+Main components:
+
+Configuration
+SessionFactory
+Session
+Transaction
+Query
+
+Configuration -> Reads the hibernate configuration
+
+SessionFactory ->
+SessionFActory is a heavyweight object used to create Hibernate sessions
+usually we create one SessionFactory per database while bootup of the application
+
+Session -> used to interact with the database
+
+Session session = sessionFactory.openSession();
+
+---------------------------------------
+3. What are Hibernate entity states?
+---------------------------------------
+
+Transient ->
+
+Object is created but not associated with Hibernate session.
+User user = new User();
+user.setName("Ravi");
+
+No DB connection yet.
+
+Persistent ->
+
+Object is associated with Hibernate session.
+session.save(user);
+Now Hibernate tracks changes.
+
+Detached ->
+Session is closed, but object still exists in Java memory.
+session.close();
+
+Removed ->
+Object is marked for deletion.
+session.delete(user);
+
+
+-------------------------------------------
+4. What is dirty checking in Hibernate?
+-------------------------------------------
+
+Dirty checking means Hibernate tracks the changes of persistent objects and updates the database
+during transaction commit
+
+Session session = SessionFactory.openSession();
+Transaction transaction = session.beginTransaction();
+User user = session.get(User.class, 1L);
+user.setName("Ravi Teja");
+transaction.commit();
+
+Even without calling update(), Hibernate fires update query because the object is persistent.
+
+
+----------------------------------------------
+5. Difference between get() and load()
+----------------------------------------------
+
+get() immediately fetches the object from DB and returns null if not found.
+load() returns a proxy and hits the DB only when the object is accessed.
+
+| get()                         | load()                                       |
+| ----------------------------- | -------------------------------------------- |
+| Hits DB immediately           | Returns proxy first                          |
+| Returns null if not found     | Throws ObjectNotFoundException when accessed |
+| Use when object may not exist | Use when object definitely exists            |
+
+
+-------------------------------------------
+6. Lazy Loading and Fetching
+-------------------------------------------
+
+Lazy loading means related data is loaded only when it is accessed.
+
+User user = session.get(User.class, 1L);
+user.getOrders(); // orders loaded here
+
+
+--------------------------------------------
+7. What is eager loading?
+--------------------------------------------
+
+Eager loading means associated data is loaded immediately along with the main entity.
+
+@OneToMany(fetch = FetchType.EAGER)
+private List<Order> orders;
+
+-------------------------------------
+8.Lazy vs Eager loading
+-------------------------------------
+
+| Lazy                                  | Eager                              |
+| ------------------------------------- | ---------------------------------- |
+| Loads data when accessed              | Loads immediately                  |
+| Better performance generally          | Can load unnecessary data          |
+| May cause LazyInitializationException | Avoids LazyInitializationException |
+| Default for collections               | Default for ManyToOne/OneToOne     |
+
+
+----------------------------------
+8. Caching
+----------------------------------
+
+first level cache ->  First-level cache is session-level cache. It is enabled by default and cannot be disabled.
+
+User u1 = session.get(User.class, 1L);
+User u2 = session.get(User.class, 1L);
+
+Only one sql is fired since the u2 is fetched from thw cache
+
+
+second-level cache ->
+
+Second-level cache is associated with SessionFactory. It is shared across sessions. It needs explicit configuration
+
+Session 1 → loads User 1
+Session 2 → can reuse cached User 1
+
+
+
+------------------------------
+9. What is HQL?
+------------------------------
+HQL -> Hibernate Query Language
+
+It is similar to SQL but works with entity names and fields instead of table names and columns.

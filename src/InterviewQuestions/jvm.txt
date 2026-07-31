@@ -1,0 +1,249 @@
+1. Can you explain why Java is platform-independent but the JVM is platform-dependent?
+---------------------------------------------------------------------------------------------
+
+The java source code is compiled by javac compiler to generate .class file which consists of byte code, this byte code is
+platform independent because that can be run in any os which has a compatible jvm.
+
+The JVM is platform-dependent because each operating system requires
+its own JVM implementation to translate the common bytecode into OS-specific native machine instructions.
+
+
+Same .class bytecode
+        |
+  -----------------
+  |       |       |
+Windows  Linux   macOS
+ JVM      JVM     JVM
+  |       |       |
+Native machine instructions
+
+
+-----------------------------------------
+Class Loader Subsystem
+-----------------------------------------
+
+The class loader is responsible for loading the .class file into jvm memory
+Classes are generally loaded dynamically, meaning the JVM does not necessarily load every class when the application starts.
+A class is loaded when it is first needed.
+
+Loading → Linking → Initialization
+
+Loading ->
+loads the .class file into jvm memory
+creates the class meta data inside jvm memory
+creates a corresponding class object
+
+Linking ->
+Linking verifies the loaded bytecode, allocates the memory for static variables
+
+Initialization ->
+static variables assignment
+executes the static blocks
+
+---------------------------------------------
+Runtime Data Areas in JVM
+---------------------------------------------
+
+| Memory area         | Shared or thread-specific |
+| ------------------- | ------------------------- |
+| Heap                | Shared                    |
+| Metaspace           | Shared                    |
+| Java Stack          | One per thread            |
+| PC Register         | One per thread            |
+| Native Method Stack | One per thread            |
+
+
+Heap -> Heap is a memory area where objects and arrays are usually stored.
+it is shared across all threads.
+managed by garbage colletor
+
+stack -> each thread gets it's own stack
+stores local variables, object references, method parameters
+not managed by gc
+
+Why does every thread need its own stack instead of sharing one common stack?
+Each thread has its own stack because every thread executes methods independently and needs separate storage for
+its method frames and local data. This also prevents one thread’s local variables from interfering with another thread.
+
+Metaspace -> metaspace stores class meta data
+shared across all the threads
+Not stored in heap, stored in native memory(OS memory)
+
+class name
+method definitions
+field definitions
+constructors
+parent class and interfaces
+runtime constant pool
+
+
+Operating System Memory
+        |
+        +-- Java Heap
+        |
+        +-- Metaspace
+        |
+        +-- Thread Stacks
+        |
+        +-- JVM internal memory
+
+
+Program Counter Register -> each thread will be having it's own program register counter
+stores the address of currently executed instruction of that thread
+It helps each thread resume execution from the correct point after context switching.
+
+
+-----------------------------------------------------------------------------------------
+where static variables and string literals are stored.
+-----------------------------------------------------------------------------------------
+static variables are stored in the heap area(store in class's Class object in the heap) and string literals are stored in the string constant pool
+which is part of the heap
+
+-------------------------------------------------------------------------------------------
+Different sections in heap
+-------------------------------------------------------------------------------------------
+
+Heap memory is divided into diff sections
+
+1.young generation -> Eden,s0,s1(survivor spaces)
+2.Old generation
+3.Metaspace
+
+
+Young generation -> stores newly created objects
+
+Most Java objects are short-lived, such as:
+
+request objects
+DTOs
+temporary strings
+method-level collections
+
+Eden ->
+newly created objects are stored here
+once the eden space is full a minor gc occurs and the jvm identifies the reachable objects in eden and active survivor space,
+these survived objects are copied into survivor spaces.
+
+Survivor spaces ->
+there are 2 survivor spaces s0 and s1, also called from space and to space
+One survivor space contains surviving objects.
+other will be empty and becomes destination during the next minor gc.
+
+The surviving objects keep moving to and fro s0 -> s1, in each minor gc , the age of the each object will be increase by 1 during minor gc
+
+once the age reaches the threshhold(ideally 15) the surviving objects will be moved to old generation.
+
+Old Generation ->
+stores long living objects that have survived multiple gc cycles in young generation
+once the old gen is full a major gc occurs, gc in this region is more expensive and it occurs less frequently
+
+Metaspace ->
+stores the meta data of the class such as fields, methods etc
+before java 8 permgen was there instead of this but had fixed size, metaspace resizes dynamically based on the application needs
+
+
+---------------------------------
+Why two survivor spaces?
+---------------------------------
+
+using two survivor spaces jvm only copies the live objects to destination spaces by increasing their age in each minor gc,
+until it is promoted to old generation when it reaches the threshold, this allows efficient removal of dead objects
+
+
+-------------------------------------------------------------------
+What all cases the object is promoted from young to old generation
+-------------------------------------------------------------------
+Objects are promoted to the Old Generation when they survive enough Young/minor GC cycles,
+when survivor space is insufficient, or in some collectors when the object is very large.
+
+
+-----------------------------------------------------------------------
+Minor GC, Major GC, and Full GC
+-----------------------------------------------------------------------
+
+Minor Gc ->
+Minor gc occurs in the young genaration, usually when the eden space becomes full
+removes unreachable objects
+promotes the surviving objects to survivor spaces
+may promote some objects directly to the old gen
+it usually occurs very frequently and very fast
+
+Major Gc ->
+major gc occurs in old generation usually when the old gen occupancy is high
+It deals with long-lived objects and is usually slower than a Minor GC.
+
+Full GC ->
+
+A Full GC is a broader collection that usually processes the entire heap and may also involve class unloading.
+It is typically more expensive and can cause a longer application pause.
+
+
+---------------------------
+Stop-the-World Pause
+---------------------------
+
+Stop-the-World Pause means JVM temporarily pauses the application threads so that the garbage collector can perform certain task safely
+Application threads running
+        ↓
+Stop-the-World pause
+        ↓
+GC work happens
+        ↓
+Application threads resume
+
+
+----------------------------------------------------
+Strong, Soft, Weak, and Phantom References
+----------------------------------------------------
+TODO: revise phantom and weak those are not clear
+
+1. Strong reference
+
+An object which has active strong reference
+ex: Employee employee = new Employee();
+this cannot be garbage collected until it is set to null.
+
+2. Soft reference
+
+A softly referenced object is kept in the memory, this may be garbage collected when the memory is low
+Ex : SoftReference<Employee> ref = new SoftReference<>(new Employee());
+Employee employee = ref.get();
+
+3. Weak reference
+
+A weekly referenced object will be garbage collected in the next gc cycle if no string refrence points to it
+
+4, Phantom reference
+
+A phantom reference is used to know that an object has been finalized and is ready for memory reclamation.
+It must be created with a ReferenceQueue.
+
+
+
+
+------------------------------
+System.gc() Behaviour
+------------------------------
+System.gc() only suggests that the JVM perform garbage collection. It does not guarantee immediate execution.
+Explicit GC calls should generally be avoided because the JVM manages garbage collection automatically,
+and forcing it may cause unnecessary pauses.
+
+
+---------------------------------------------------
+int vs Integer which consumes more memory in java
+---------------------------------------------------
+
+int uses 4bytes of memory, stores the value directly
+Integer consumes 16 bytes, object header -12 and value 4 bytes
+
+Integer object
++----------------------+
+| Object header        |
++----------------------+
+| int value: 10        |
++----------------------+
+| Padding              |
++----------------------+
+
+
+-------------------------------

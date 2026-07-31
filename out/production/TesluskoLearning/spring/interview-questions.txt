@@ -1,0 +1,73 @@
+1) What is the Spring Framework and what are its core modules?
+
+Spring is a comprehensive framework for building Java applications.
+Its primary feature is Dependency Injection and IoC, which decouples dependencies.
+Core modules include Spring Core (IoC container), Spring AOP, Spring Web/MVC, and Spring Data access.
+Spring Boot is a project that simplifies Spring application setup.
+
+2) What is the difference between IoC (Inversion of Control) and Dependency Injection (DI)?
+
+IOC(Inversion of control) : Instead of Application creating objects spring creates them, control passed to spring
+Control is "inverted" from developer to framework
+
+DEPENDENCY INJECTION : technique of injecting dependencies into objects
+It's a design pattern - specific way to achieve IoC
+There are different types of DI:
+
+Constructor Injection
+Setter Injection
+Field Injection
+
+
+3) What are the different types of Dependency Injection? Explain each with a code example.
+
+public class Employee {
+
+    // 1. FIELD INJECTION
+    @Autowired
+    private Department department;
+
+    // 2. SETTER INJECTION
+    @Autowired
+    public void setDepartment(Department department) {
+        this.department = department;
+    }
+
+    // 3. CONSTRUCTOR INJECTION
+    public Employee(Department department) {
+        this.department = department;
+    }
+}
+
+
+Best Practice
+
+public class Employee {
+    private final Department department;  // immutable
+
+    // Constructor injection - RECOMMENDED
+    public Employee(Department department) {
+        this.department = department;
+    }
+}
+
+
+4) What is a Spring Bean? How does Spring create and manage beans?
+A spring bean is a java object instantiated, assembled and managed by Spring IOC container
+
+Stereotype Annotations (Complete List):
+
+@Component - Generic component
+@Service - Business logic layer
+@Repository - Data access layer
+@Controller - Web controller layer
+@RestController - REST endpoint
+
+Bean Creation & Registration Process:
+
+Component Scanning - Spring scans classpath for annotated classes
+Bean Definition Creation - Creates metadata for each class
+Instantiation - Creates bean instances
+Dependency Injection - Injects dependencies
+Registration - Stores in IoC container (HashMap-like structure)
+
