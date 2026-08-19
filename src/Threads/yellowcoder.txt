@@ -286,6 +286,38 @@ T2 released permit
 T4 acquired permit
 
 
+----------------------------------------------------
+What is Reentrancy?
+
+Reentrancy means a thread that already holds a lock can acquire the same lock again without getting blocked.
+
+For example, Java's synchronized lock is reentrant:
+
+class Example {
+
+    synchronized void methodA() {
+        System.out.println("A");
+        methodB();
+    }
+
+    synchronized void methodB() {
+        System.out.println("B");
+    }
+}
+
+Suppose Thread-1 enters methodA(), It acquires the object's monitor lock, But methodB() is also synchronized on the same object,
+so the thread doesn't need to wait to acquire the lock since it has already locked
+
+Because Java locks are reentrant:
+
+Thread-1 already owns the lock
+        ↓
+allowed to acquire it again
+        ↓
+methodB() executes
+
+Reentrant = "I already own this lock, so I can enter again."
+
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 

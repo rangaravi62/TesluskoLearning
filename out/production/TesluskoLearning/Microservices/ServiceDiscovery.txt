@@ -1,0 +1,27 @@
+Service Discovery
+-------------------------------------
+Service Discovery is a mechanism that enables microservices to locate and communicate with each other without
+hardcoding IP addresses or ports.
+services network locations change frequently.
+A service registry like Eureka maintains the current locations of all services,
+allowing clients to discover and communicate with them dynamically.
+
+---------------------
+Key Points
+---------------------
+
+Service registers with eureka server.
+Eureka server maintains the registry.
+Services sends the heartbeat to keep their registrations alive.
+Consumers fetches the registry and call the required services.
+If a service is down, eureka removes it from registry.
+
+
+------------------------
+Eureka Components
+------------------------
+
+Eureka Server -> Central server that maintains service registry
+Service Provider -> Microservice that registers itself with Eureka
+Service Consumer -> Microservice that discovers and call the other services
+Eureka Client -> Library included in each microservices to interact with Eureka server

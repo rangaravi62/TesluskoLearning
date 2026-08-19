@@ -71,3 +71,32 @@ Instantiation - Creates bean instances
 Dependency Injection - Injects dependencies
 Registration - Stores in IoC container (HashMap-like structure)
 
+
+5) How do you achieve API versioning in Spring Boot?
+
+API versioning means supporting multiple versions of the same API so that existing clients don't break
+when you introduce incompatible changes.
+
+there are several ways to achieve this
+
+1. URI/Path versioning — most common
+ex :
+GET /api/v1/users/10
+GET /api/v2/users/10
+
+2. Request parameter versioning
+ex:
+GET /users/10?version=1
+GET /users/10?version=2
+
+3. Header versioning
+ex:
+GET /users/10
+X-API-VERSION: 1
+
+
+Spring MVC has built-in API-versioning support through the version attribute
+@GetMapping(value = "/users/{id}", version = "1")
+public UserV1 getUserV1(@PathVariable Long id) {
+    // ...
+}

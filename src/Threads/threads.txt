@@ -1,4 +1,5 @@
 Threads ------
+Multithreading means executing multiple threads concurrently within the same process.
 
 A thread is a lightweight subprocess, the smallest unit of processing. It is a separate path of execution.
 Threads are independent. If an exception occurs in one thread, it does not affect other threads. It uses a shared memory area.

@@ -1,0 +1,124 @@
+Monolith and Microservices
+--------------------------------------------------------------
+
+
+A monolithic application is built as a single deployable unit where all modules like User, Order, and Payment are packaged together.
+Microservices split the application into multiple independently deployable services, where each service owns a
+single business capability, database, and deployment lifecycle.
+Microservices provide better scalability, fault isolation, and independent deployment
+but introduce additional complexity like service discovery, distributed communication, and monitoring.
+
+--------------
+Monolith
+--------------
+
+ Flipkart.jar
+
+        +-----------------------------+
+        |                             |
+        |   Login Module              |
+        |   Product Module            |
+        |   Order Module              |
+        |   Payment Module            |
+        |   Notification Module       |
+        |                             |
+        +-----------------------------+
+        Single Deployment
+
+Imagine flipkart, it has Login,Products, Orders, Payments etc everything will be inside one application one jar/war, one deployment,
+usually one database
+Suppose if one module has one bug , but you have to deploy the entire application, Slow deployments
+Huge Codebase -> since everything will be inside one Project/Application
+Scaling problem -> If Order service get recieve 10x requests than payment service, then we have scale the entire application,
+Waste of memory and CPU.
+Single point of failure -> If Payment module has any memory leak, entire application crashes.
+
+
+----------------
+Microservices
+----------------
+
+Now split application.
+
+            API Gateway
+
+                 |
+
+-----------------------------------------
+
+User Service
+Order Service
+Product Service
+Payment Service
+Notification Service
+
+
+Each service has
+
+separate project
+separate deployment
+separate team
+separate database
+
+
+instead of one jar flipkart.jar
+now we'll be having user-service.jar, order-service.jar, payment-service.jar, product-service.jar
+
+If we have to modify any payment api, we need to deploy only the payment service
+
+Independent Scaling -> if the order service recieves huge traffic increase the instances of orders alone
+
+orders -> 10 instances
+payment -> 2 instances
+user -> 2 instances etc
+
+Independent Technology ->
+Microservices even allow different technologies.
+
+User -> java, Orders -> Go, Payments -> Python etc
+
+Everything communicates over HTTP/gRPC/messages.
+
+Database -> Each service owns its database
+
+
+
+---------------------------------------------------------------------------------------------------------------------
+Monolith                                                               Microservices
+---------------------------------------------------------------------------------------------------------------------
+
+Single application                                              multiple applications
+
+single deployment                                            multiple independent deployments
+
+shared database                                              each service has its own database
+
+Tight coupling                                               Loose coupling
+
+one failure can bring down entire application               Fault Isolation
+
+scale whole application                                     scale only required service
+
+Less infrastructure                                         Requires Eureka, Gateway, Config Server, Monitoring, etc.
+
+
+
+---------------------------------------------------
+Challenges with Microservices
+---------------------------------------------------
+
+complexity in deployment
+
+network latency
+
+Distributed transactions
+
+Service discovery
+
+Monitoring, Logging and Security
+
+Configuration management
+
+
+
+

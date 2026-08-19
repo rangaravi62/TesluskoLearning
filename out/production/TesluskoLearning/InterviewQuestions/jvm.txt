@@ -107,7 +107,7 @@ Heap memory is divided into diff sections
 
 1.young generation -> Eden,s0,s1(survivor spaces)
 2.Old generation
-3.Metaspace -> not part of heap
+3.Metaspace
 
 
 Young generation -> stores newly created objects
@@ -197,8 +197,6 @@ Strong, Soft, Weak, and Phantom References
 ----------------------------------------------------
 TODO: revise phantom and weak those are not clear
 
-In Java, Strong, Soft, Weak, and Phantom references mainly tell the Garbage Collector how strongly an object should be kept alive.
-
 1. Strong reference
 
 An object which has active strong reference
@@ -248,66 +246,4 @@ Integer object
 +----------------------+
 
 
---------------------------------------------------------
-Memory Leaks in Java
---------------------------------------------------------
-
-Memory leaks occur when the objects which are no longer used are strongly referenced and GC won't be able to retain the memory
-with time eventually the heap memory grows and gives OutOfMemoryError
-
-common causes are --->
-
-static collections that keep growing
-thread local values not cleaned up
-unclosed resources
-
-
-symptoms of a memory leak --->
-
-Increases Heap memory over time
-Frequent Garbage Collection without memory recovery
-OutOfMemoryError
-
-
---------------------------------------------------------
-What is a Heap Dump
---------------------------------------------------------
-
-Heap Dump : A heap dump is basically a snapshot of all objects currently present in the Java heap.
-
-Thread dump : snapshot of all JVM threads at a particular moment.It shows each thread's state and stack trace.
-
-It contains things like:
-
-Object types
-Number of instances
-Object sizes
-References between objects
-GC roots
-
-You can configure JVM to automatically generate a heap dump: -XX:+HeapDumpOnOutOfMemoryError
-
-
--------------------------------------------------------------
-How would you detect a memory leak in Java?
--------------------------------------------------------------
-
-First i would monitor the heap usage using the tools like VisualVM, jconsole etc, if the heap usage keeps on increasing after GC
-the i would take a heapdump and analyse and find the reference which is preventing the unused objects from being garbage collected.
-
-
---------------------------------------------------------
-Different types of Garbage Collectors
---------------------------------------------------------
-
-| GC              | Main idea                | Best suited for                          | Pause behavior                   |
-| --------------- | ------------------------ | ---------------------------------------- | -------------------------------- |
-| **Serial GC**   | Single GC thread         | Small apps, small heaps                  | Longer STW pauses                |
-| **Parallel GC** | Multiple GC threads      | High throughput                          | STW, but faster than Serial      |
-| **G1 GC**       | Splits heap into regions | Large heaps, balanced latency/throughput | Shorter, more predictable pauses |
-| **ZGC**         | Mostly concurrent GC     | Very large heaps, ultra-low latency      | Very small pauses                |
-
-
-
-
-
+-------------------------------

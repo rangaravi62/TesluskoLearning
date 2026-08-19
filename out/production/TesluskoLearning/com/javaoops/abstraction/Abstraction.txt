@@ -69,7 +69,7 @@ class Airplane implements Flyable { }
 8. Abstract Class vs Interface
 Feature                     	        Abstract Class	                     Interface
 Can have constructors	                    Yes	                                    No
-Can have instance variables	                Yes	                                    No(variables in interfaces are by default public static final)
+Can have instance variables	                Yes	                                    No(variables in interfaces are by default public static final(CONSTANTS))
 Multiple inheritance	                     No	                                    Yes
 Purpose	                          Common base + partial implementation	       Contract
 Methods	                            Abstract + concrete	                       Mostly abstract

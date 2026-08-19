@@ -1,0 +1,237 @@
+1) Which versions of Java have you worked with, and what are the features introduced in Java 17?
+------------------------------------------------------------------------------------------------------------------
+
+Java 8,11,17
+
+Java 8 was a major change because it introduced functional programming features into java --------
+
+Lambda Expressions
+Functional Interfaces
+Streams API
+Method References
+Default and Static Methods in Interfaces
+Optional
+New Date & Time API
+
+Java 11 is another LTS release --------
+
+New string methods -> isBlank,lines, strip,stripLeading, stripTrailing, repeat
+var in lambda parameters
+HttpClient
+
+Java 17 ----------
+
+Important features available in Java 17
+
+Records
+Sealed Classes
+Switch Expressions
+Text Blocks
+
+
+-----------------------------------------------------------
+Records
+-----------------------------------------------------------
+
+A record is a special type of class designed mainly to hold data with much less boilerplate.
+
+public record Employee(int id, String name) {
+}
+
+For this Java generates
+
+private final int id;
+private final String name;
+
+constructor
+id()
+name()
+
+equals()
+hashCode()
+toString()
+
+
+Records are shallowly immutable
+
+Why "shallowly"?
+if we have a mutable object   ->   List<String> skills
+we cannot do skills = anotherSkills
+but we can add skill.add()
+
+Records can have methods, static variables and methods
+Records cannot extend another class as it extends Record class
+Records can implement interfaces
+Records are final, cannot be extended
+
+----------------------------
+Lombok   vs   Record
+----------------------------
+
+Lombok
+@Data generates getters/setters
+classes are mutable
+can extend another class
+
+Record
+no setters
+components are final
+cannot extend another class as it extends Record class
+
+
+usually used for DTOs, configuration data, query result etc
+
+
+
+--------------------------------------------------------------------
+Sealed Classes
+--------------------------------------------------------------------
+
+A sealed class lets us control which classes are allowed to inherit from it.
+A sealed class is used to restrict inheritance by specifying which classes are allowed to extend it using the permits clause.
+Every direct subclass must be declared as final, sealed, or non-sealed.
+final stops further inheritance,
+sealed continues restricting it,
+and non-sealed opens the hierarchy again.
+
+public class Payment {
+}
+
+this can be extended by any class
+
+class CardPayment extends Payment {}
+class UpiPayment extends Payment {}
+class CryptoPayment extends Payment {}
+
+this is where it is helpful
+
+public sealed class Payment
+        permits CardPayment, UpiPayment {
+}
+
+Now only these two classes are allowed to inherit
+
+final class CardPayment extends Payment {
+}
+
+final class UpiPayment extends Payment {
+}
+
+This is not allowed:
+class CryptoPayment extends Payment {
+}
+
+
+--------------------------------------------
+Pattern Matching for instanceof
+--------------------------------------------
+
+old code :
+if (obj instanceof String) {
+    String str = (String) obj;
+    System.out.println(str.length());
+}
+
+new syntax :
+
+if (obj instanceof String str) {
+    System.out.println(str.length());
+}
+
+No separate cast needed.
+
+-----------------------------------
+Switch Expressions
+-----------------------------------
+
+String result = switch (day) {
+    case 1 -> "Monday";
+    case 2 -> "Tuesday";
+    default -> "Unknown";
+};
+
+------------------------------------
+Text Blocks
+------------------------------------
+
+String json = """
+        {
+          "name": "Ravi",
+          "age": 25
+        }
+        """;
+
+
+
+------------------------------------------------------------------------------------------------------------------------
+What is the difference between the Runnable and Callable interfaces in Java?
+------------------------------------------------------------------------------------------------------------------------
+
+Runnable and Callable both represent tasks that can be executed by threads, but the main difference is that
+Callable can return a result and throw checked exceptions, while Runnable cannot.
+
+------------
+Runnable
+------------
+
+@FunctionalInterface
+public interface Runnable {
+    void run();
+}
+
+Runnable task = () -> {
+    System.out.println("Processing...");
+};
+
+new Thread(task).start();
+
+or
+
+executor.submit(task);
+
+
+-------------
+Callable
+-------------
+
+@FunctionalInterface
+public interface Callable<V> {
+    V call() throws Exception;
+}
+
+Callable<Integer> task = () -> {
+    return 10 + 20;
+};
+
+Future<Integer> future = executor.submit(task);
+
+Integer result = future.get();
+
+
+-----------------------
+Runnable vs Callable
+-----------------------
+
+| Runnable                           | Callable                              |
+| ---------------------------------- | ------------------------------------- |
+| `run()`                            | `call()`                              |
+| Returns `void`                     | Returns `V`                           |
+| Cannot declare checked exception   | Can throw checked exception           |
+| `Runnable`                         | `Callable<V>`                         |
+| Can be passed directly to `Thread` | Cannot be passed directly to `Thread` |
+| Result not returned directly       | Result obtained using `Future`        |
+
+
+
+------------------------------------------------------------------------------------------------------------------------
+What is the condition for converting a HashMap bucket from a linked list to a red-black tree?
+------------------------------------------------------------------------------------------------------------------------
+
+In Java 8+, a HashMap bucket is converted from a linked list to a Red-Black Tree when two conditions are satisfied:
+
+1. Number of nodes in the bucket reaches 8
+2. HashMap table capacity is at least 64
+
+TREEIFY_THRESHOLD = 8;
+MIN_TREEIFY_CAPACITY = 64;
+UNTREEIFY_THRESHOLD = 6;

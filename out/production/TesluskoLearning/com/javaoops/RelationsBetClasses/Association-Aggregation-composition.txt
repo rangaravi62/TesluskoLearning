@@ -84,3 +84,86 @@ class Room {
 
 Here, Room objects are part of the House object. If the House is destroyed, the Room objects are also destroyed.
 Stronger Bond: The relationship is tightly coupled.
+
+
+-----------------------------------------------------------------------------
+Association, aggregation and composition
+-----------------------------------------------------------------------------
+
+Association -> Association represents a relationship between two independent objects.
+
+One-to-one: one person has one passport.
+One-to-many: one department has many employees.
+Many-to-many: many students attend many courses.
+
+
+Aggregation -> Aggregation is a specialized form of association representing a weak HAS-A relationship.
+it is a whole-part relationship, where the part can exist independently of the whole.
+
+ex : College class having List of employees, even if we delete college class employees can exist
+
+
+Composition -> Composition is a stronger form of association representing a strong HAS-A relationship.
+it is a whole-part relationship, where the part cannot exist without the whole.
+
+ex : House class having list of rooms, The rooms are considered meaningful only as part of that house.
+
+
+
+----------------------------------------------------------------------------------------------------------------------
+What is the difference between an IS-A relationship and a HAS-A relationship? When would you prefer HAS-A over IS-A?
+----------------------------------------------------------------------------------------------------------------------
+
+We prefer HAS-A over IS-A because it promotes loose coupling
+
+IS-A -> IS-A relations represents inheritance, used when a class is a genuine subtype of a parent class,
+here parent class and child class ar tightly coupled, changes made to parent class can affect child class.
+
+For example, Sparrow is a Bird, so Sparrow can extend Bird.
+class Bird {
+    void fly() {
+    }
+}
+
+class Sparrow extends Bird {
+}
+
+
+
+HAS-A -> HAS-A relations repreents composition or aggregation, A class containing another class as a field and can be loosely coupled using
+Abstraction
+
+For example, a Car has an Engine.
+
+class Engine {
+    void start() {
+    }
+}
+
+class Car {
+
+    private final Engine engine;
+
+    Car(Engine engine) {
+        this.engine = engine;
+    }
+
+    void start() {
+        engine.start();
+    }
+}
+
+
+
+-----------------------------------------------------------------------------------------------------
+Why is composition often preferred over inheritance?
+-----------------------------------------------------------------------------------------------------
+
+Composition is often preferred over inheritance because inheritance creates tight coupling between the parent and child classes.
+A change in the parent’s behaviour or structure may affect all subclasses.
+
+With composition we can achieve loose coupling by depending on abstraction
+
+
+Therefore, I prefer composition when I need reusable or interchangeable behaviour,
+and inheritance only when there is a genuine IS-A relationship.

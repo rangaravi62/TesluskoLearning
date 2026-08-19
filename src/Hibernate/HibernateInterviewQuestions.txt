@@ -1,6 +1,7 @@
 1. What is Hibernate?
 ------------------------
 Hibernate is a ORM framework, ORM stands for Object Relational mapping which maps java objects to database tables
+so we can perform database operations using java objects instead of writing SQL manually.
 
 Advantages:
 Reduces JDBC boiler plate code
@@ -27,9 +28,13 @@ SessionFactory ->
 SessionFActory is a heavyweight object used to create Hibernate sessions
 usually we create one SessionFactory per database while bootup of the application
 
-Session -> used to interact with the database
+Session -> used to interact with the database and perform db operations
 
 Session session = sessionFactory.openSession();
+
+Transaction -> Manages commit/rollback
+
+Query -> Used for HQL/JPQL queries
 
 ---------------------------------------
 3. What are Hibernate entity states?
@@ -146,3 +151,105 @@ Session 2 → can reuse cached User 1
 HQL -> Hibernate Query Language
 
 It is similar to SQL but works with entity names and fields instead of table names and columns.
+
+
+-------------------------------------------------------
+What is the difference between JPA and Hibernate?
+-------------------------------------------------------
+
+JPA is a Java specification that defines standard APIs and rules for ORM. Hibernate is one of the implementations of JPA.
+
+Annotations like @Entity, @Id, @OneToMany come from JPA, while Hibernate provides the underlying ORM implementation.
+
+
+
+-----------------------------------------------------------------
+mappedBy / owning-side concept
+-----------------------------------------------------------------
+
+the owning side is the entity that manages the foreign key
+
+In a Department-Employee relationship, Employee is usually the owning side because it contains department_id using @JoinColumn
+
+Department is the inverse side and uses mappedBy = "department" to indicate that the relationship is already
+managed by the department field in Employee.
+
+@Entity
+class Employee {
+
+@Id
+Long employeeId;
+
+String employeeName;
+
+@JoinColumn("department_id")
+@ManyToOne
+Department department;
+
+}
+
+
+@Entity
+class Department {
+
+@Id
+Integer departmentId;
+
+String departmentName;
+
+@OneToMany(mappedBy = "department", fetch = FetchType.LAZY)
+List<Employee> employees;
+
+}
+
+
+Now suppose we fetch all departments:
+
+List<Department> departments =
+        departmentRepository.findAll();
+
+Hibernate first executes
+SELECT * FROM department;
+
+that's 1 query
+
+Because employees is LAZY, Hibernate has not yet fetched the employees.
+
+
+for (Department department : departments) {
+
+    System.out.println(department.getName());
+
+    for (Employee employee : department.getEmployees()) {
+        System.out.println(employee.getName());
+    }
+}
+
+department.getEmployees() -> for each department if executes
+select from employee where department_id = ?
+
+so that's 1 + N
+1 -> to fetch all N departments
+N -> fetch the employees in each department
+
+That's the N+1 problem
+
+this happens because the Fetch type is Lazy
+
+We can solve this using JOIN FETCH
+
+public interface DepartmentRepository
+        extends JpaRepository<Department, Long> {
+
+    @Query("""
+        SELECT DISTINCT d
+        FROM Department d
+        LEFT JOIN FETCH d.employees
+    """)
+    List<Department> findAllWithEmployees();
+}
+
+then List<Department> departments =
+             departmentRepository.findAllWithEmployees();
+
+this will populate both employees and departments in both the classes
