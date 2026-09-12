@@ -1,4 +1,8 @@
 Threads ------
+
+Concurrency = dealing with multiple tasks at once, Concurrency can happen even on a single-core CPU through context switching
+Parallelism = executing multiple tasks at the same time, parallelism generally requires multiple CPU cores.
+
 Multithreading means executing multiple threads concurrently within the same process.
 
 A thread is a lightweight subprocess, the smallest unit of processing. It is a separate path of execution.
@@ -141,8 +145,10 @@ Thread Scheduler
 A component of Java that decides which thread to run or execute and which thread to wait is called a thread scheduler in Java.
 In Java, a thread is only chosen by a thread scheduler if it is in the runnable state.
 
-if there is more than one thread in the runnable state, it is up to the thread scheduler to pick one of the threads and ignore the other ones.
-There are some criteria that decide which thread will execute first. There are two factors for scheduling a thread i.e. Priority and Time of arrival.
+if there is more than one thread in the runnable state, it is up to the thread scheduler to
+pick one of the threads and ignore the other ones.
+There are some criteria that decide which thread will execute first.
+There are two factors for scheduling a thread i.e. Priority and Time of arrival.
 
 Priority: Priority of each thread lies between 1 to 10. If a thread has a higher priority,
 it means that thread has got a better chance of getting picked up by the thread scheduler.
@@ -150,7 +156,8 @@ it means that thread has got a better chance of getting picked up by the thread 
 
 Time of Arrival: Suppose two threads of the same priority enter the runnable state,
 then priority cannot be the factor to pick a thread from these two threads.
- In such a case, arrival time of thread is considered by the thread scheduler. A thread that arrived first gets the preference over the other threads.
+ In such a case, arrival time of thread is considered by the thread scheduler.
+ A thread that arrived first gets the preference over the other threads.
 
 
 
@@ -167,9 +174,9 @@ public static void sleep(long mls, int n) throws InterruptedException
 
 
 
----------------------------
+-----------------------------------------------------------------------------
 What if we call Java run() method directly instead start() method?
----------------------------
+-----------------------------------------------------------------------------
 
 Each thread starts in a separate call stack.
 Invoking the run() method from the main thread, the run() method goes onto the current call stack rather than at the beginning of a new call stack.
@@ -354,7 +361,8 @@ lock2 + monitor
 Think of monitor like a room key.
 Only ONE thread can hold a monitor at a time.
 
-if one thread has acquired the monitor of lock1 other threads cannot acquire the monitor of lock1 until the thread releases the monitor of lock1.
+if one thread has acquired the monitor of lock1 other threads cannot acquire the monitor of lock1
+until the thread releases the monitor of lock1.
 
 
 

@@ -160,6 +160,62 @@ Map<Boolean, List<Student>> map =
             ));
 
 
+------------------------------------------------------------------------------------------------------------------------
+-> Comparable vs Comparator in Java
+
+Comparable is used to define the natural ordering of a class using compareTo().
+Comparator is used to define external/custom sorting using compare(), and allows multiple sorting strategies.
+
+
+| Comparable                                       | Comparator                                |
+| ------------------------------------------------ | ----------------------------------------- |
+| `java.lang.Comparable`                           | `java.util.Comparator`                    |
+| Sorting logic is inside the class                | Sorting logic is outside the class        |
+| Defines **natural/default sorting**              | Defines **custom/multiple sorting rules** |
+| Uses `compareTo()`                               | Uses `compare()`                          |
+| `class Employee implements Comparable<Employee>` | `Comparator<Employee>`                    |
+| Usually one natural ordering                     | Can have many different orderings         |
+
+
+Comparator :
+
+class Employee implements Comparable<Employee> {
+
+    int id;
+    String name;
+
+    public Employee(int id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
+    @Override
+    public int compareTo(Book b) {
+            if (id > b.id) {
+                return 1;
+            } else if (id < b.id) {
+                return -1;
+            } else {
+                return 0;
+            }
+        }
+}
+
+then Collections.sort(employees);
+
+
+Comparator :
+
+Suppose sometimes you want to sort employees by name, sometimes by salary.
+
+Comparator<Employee> nameComparator =
+        (e1, e2) -> e1.getName().compareTo(e2.getName());
+
+employees.sort(nameComparator);
+
+employees.sort(Comparator.comparing(Employee::getName));
+
+employees.sort(Comparator.comparing(Employee::getSalary));
 
 
 

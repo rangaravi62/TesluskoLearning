@@ -1,0 +1,248 @@
+1. What is Apache Kafka?
+
+Kafka is a distributed, fault-tolerant event streaming platform used for high-throughput, low-latency,
+real-time data processing.
+
+Use Cases :
+Event streaming
+Log aggregation
+Message queues
+
+
+2. What is a Topic?
+
+Topic is a logical stream of records/data
+topics can have multiple partitions
+
+
+3. What is a Partition?
+
+An ordered, immutable sequence of messages
+The messages stored inside partition are ordered
+Provides Parallelism
+
+
+4. What is an Offset?
+
+A unique ID for each message in a partition
+Managed per consumer group
+
+
+5. What is a Producer?
+
+publishes messages to kafka topic
+Can choose a partition ->
+1 -> if no key/ partition name is specified then it uses round robin
+2 -> if key is specified then hash(key) % (no of partitions) will sit in the output of this partition ex : multiple events of order 101 will go into the same partition
+3 -> if partition name is specified then it will go into that partition.
+
+
+6. What is a Consumer?
+Reads the messages from topics
+pull based
+belongs to a consumer group
+
+
+7. What is a Consumer Group?
+Group of consumers sharing the load
+Each partition of a topic is consumed by only one consumer in a group
+A single partition of a topic can be consumed by 2 consumers of different groups
+Enables horizontal scaling ->
+
+ex :
+
+Topic -> orders
+4 partitions → P0, P1, P2, P3
+
+-> Case 1: 1 consumer (group-id = G1)
+
+C1 → P0, P1, P2, P3
+Sequential processing
+Slow
+
+
+-> Case 2: 2 consumers (same group G1)
+
+C1 → P0, P1
+C2 → P2, P3
+Parallel processing
+Throughput doubled
+
+
+->Case 3: 4 consumers
+
+C1 → P0
+C2 → P1
+C3 → P2
+C4 → P3
+Maximum parallelism
+
+-> Case 4: 6 consumers
+
+4 consumers → active
+2 consumers → idle
+
+📌 Max parallelism = number of partitions
+
+One consumer → MANY partitions ✅
+
+One partition → ONE consumer
+                within the same consumer group ✅
+
+So this would not be possible simultaneously:
+C1 → P0, P1, P2, P3
+C2 → P2, P3
+
+
+
+
+8. What happens if consumers > partitions?
+Extra consumers will be idle.
+
+
+9. What happens if a consumer dies?
+Kafka triggers rebalance
+Partitions reassigned to other consumers
+
+
+10. What is a Broker?
+A Kafka server that:
+Stores data
+Serves producers and consumers
+
+
+11. How does Kafka ensure fault tolerance?
+
+We can have multiple replica brokers of broker-0 inside a cluster in different/same location
+
+the same topics and partitions will be replicated in other brokers as well
+
+every broker will be having leader and followers
+All the producer and consumer will communicate with the leaders
+
+if one consumer crashes then the zookeeper which has metadata will make any of the other follower as the leader so that the processing happens without any issue.
+
+With this replication and leader election we can achieve fault tolerance
+
+
+
+12. What is ZooKeeper used for?
+
+zookeeper is used till kafka 2.8
+cluster coordination
+maintains broker metadata
+leader election
+
+> 2.8 kafka uses KRaft (this comes with inbuilt metadata, leader election, internal coordination) without zookeeper
+
+
+
+13. What is Event Streaming?
+
+Event streaming = continuously capturing, storing, processing, and reacting to events in real time.
+
+An event = something that happened
+Example:
+
+Order placed
+Payment completed
+User logged in
+Item shipped
+
+
+14. What is consumer rebalancing in Kafka? How does it work?
+
+Consumer rebalancing in Kafka means redistributing topic partitions among consumers in the same consumer group.
+
+For example, suppose a topic has 4 partitions:
+P0 P1 P2 P3
+
+Initially, one consumer is running:
+C1 -> P0, P1, P2, P3
+
+Now a second consumer joins the same group:
+C1 -> P0, P1
+C2 -> P2, P3
+
+That redistribution is called a rebalance.
+
+
+A rebalance can happen when a consumer joins the group, a consumer leaves or crashes, the number of partitions changes,
+or sometimes when group membership/configuration changes.
+
+Kafka uses a group coordinator, which is one of the Kafka brokers, to manage the consumer group.
+Consumers send heartbeats to it. When group membership changes, Kafka detects that the current partition
+assignment is no longer valid and calculates a new assignment.
+
+
+
+15. What is consumer grouping in Kafka, and how does it help?
+
+An offset is a unique sequential position assigned to each record within a Kafka partition.
+Consumers use committed offsets to track their progress and resume consumption after failures or rebalances.
+
+It enables parallel processing, horizontal scaling, load balancing, and fault tolerance.
+Different consumer groups can independently consume the same messages.
+
+Within one consumer group, a partition is assigned to only one consumer at a time.
+
+
+16. What is an offset in Kafka?
+
+An offset in Kafka is the position of a message inside a specific partition.
+The offset tells Kafka and the consumer, “which message am I at?”
+Offsets are unique only within a partition, not across the whole topic.
+
+For consumers, Kafka tracks the committed offset per consumer group per partition.
+
+ex:
+orders topic
+
+P0 -> consumer group committed offset = 105
+P1 -> consumer group committed offset = 230
+
+If the consumer crashes and another consumer takes over that partition,
+it resumes based on the last committed offset rather than starting from the beginning.
+
+
+17. What is partitioning in Kafka, and what purpose does it serve?
+
+Partitioning in Kafka means splitting a topic into multiple partitions so Kafka can store and process messages in parallel.
+It enables horizontal scaling, parallel processing, ordering and load distribution across brokers and consumers.
+Kafka guarantees message ordering within each partition.
+
+
+18. How do you handle duplicate records in Kafka?
+
+Kafka can produce duplicate processing under at-least-once semantics.
+I handle it by making consumers idempotent, usually by assigning each event a unique ID and storing/checking
+that ID before performing the business operation.
+Producer idempotence and Kafka transactions can also be used depending on the use case.
+
+
+19. What is the difference between replication factor and ISR?
+
+Replication factor is the total number of copies configured for a partition,
+while ISR is the subset of replicas that are currently sufficiently synchronized with the leader.
+
+Replication factor = 3
+
+Leader     ✅ ISR
+Follower 1 ✅ ISR
+Follower 2 ❌ lagging
+
+ISR size = 2
+
+
+20. Table of few scenarios
+
+| Problem                                      | Solution                  |
+| -------------------------------------------- | ------------------------- |
+| Broker crashes and message shouldn't be lost | Replication               |
+| Need strong write durability                 | `acks=all`                |
+| Producer retry may duplicate record          | Idempotent producer       |
+| Consumer may process same event again        | Idempotent consumer       |
+| Related events must stay ordered             | Same key → same partition |
+
+
+

@@ -137,6 +137,7 @@ CAS(
 )
 
 “Set bucket 5 to this new node only if bucket 5 is still null.”
+This operation happens atomically
 
 
 

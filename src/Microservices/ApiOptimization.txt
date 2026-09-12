@@ -1,0 +1,25 @@
+Enable caching instead of hitting db for every api call
+Enable the connection pooling mechanism instead of opening a db connection of every api call
+Avoid N+1 query problem
+Enable Pagination
+Asynchronous Logging
+Payload Compression
+
+
+
+
+First, I would compare the query execution in lower and production environments.
+I would check whether production has much more data, whether the required indexes are present,
+and whether the execution plan is different. I would also check whether production db is experiencing
+blocking/locks, and high database load.
+Based on that, I would optimize the query or indexes.
+
+
+An even shorter version:
+
+I would check data volume, indexes, execution plan, statistics, locks, and database load. Production may be slower because of larger data or a different execution plan even if the query is the same.
+
+For an interview, this 6-point flow is easy to remember:
+
+Data volume → Indexes → Execution plan → Statistics → Locks → DB load.
+

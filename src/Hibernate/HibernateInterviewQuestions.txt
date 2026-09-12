@@ -36,6 +36,31 @@ Transaction -> Manages commit/rollback
 
 Query -> Used for HQL/JPQL queries
 
+
+------------------------------------------------------------------------------
+How does Hibernate work internally?
+------------------------------------------------------------------------------
+
+Hibernate is an ORM framework that maps Java entities to database tables. At startup,
+Hibernate creates a SessionFactory containing entity metadata and configuration.
+During a transaction, a Session maintains a persistence context. When we fetch an entity,
+Hibernate first checks the persistence context; if it is not present, it generates SQL and executes it through JDBC.
+The returned database row is converted into a managed Java entity.
+Hibernate tracks managed entities using dirty checking, and during flush
+it generates the required INSERT, UPDATE, or DELETE statements before the transaction commits.
+
+Java Entity
+    ↓
+Session
+    ↓
+Persistence Context
+    ↓
+Hibernate ORM
+    ↓
+JDBC
+    ↓
+Database
+
 ---------------------------------------
 3. What are Hibernate entity states?
 ---------------------------------------
@@ -53,6 +78,8 @@ Persistent ->
 Object is associated with Hibernate session.
 session.save(user);
 Now Hibernate tracks changes.
+If the same entity is requested again within the same persistence context,
+Hibernate can return the already managed entity instead of querying the database again.
 
 Detached ->
 Session is closed, but object still exists in Java memory.
@@ -62,6 +89,73 @@ Removed ->
 Object is marked for deletion.
 session.delete(user);
 
+Ex :
+
+Session session = sessionFactory.openSession();
+Transaction tx = session.beginTransaction();
+
+User user = new User();
+user.setName("Ravi");     // Transient
+
+session.persist(user);    // Persistent
+
+user.setName("Ravi Teja");
+// Hibernate tracks this change
+
+tx.commit();
+session.close();          // Detached
+
+
+
+------------------------------------------------------------------------------
+What is the difference between persist() and merge() in Hibernate?
+------------------------------------------------------------------------------
+
+persist() ---> Use persist() for a new/transient entity.
+
+session.persist(user);
+
+the same user object becomes persistent and is tracked by the Hibernate Session.
+
+Session session = sessionFactory.openSession();
+Transaction tx = session.beginTransaction();
+
+User user = new User();
+user.setName("Ravi");     // Transient
+
+session.persist(user);    // Persistent
+
+tx.commit();
+session.close();
+
+
+merge() ---> used when you have a detached entity and want to synchronize its state with the current session.
+
+Ex :
+
+Session session1 = sessionFactory.openSession();
+
+User user = session1.get(User.class, 1L);
+
+session1.close();
+
+Here the user is not associated with the hibernate session anymore it is detached
+
+now if we modify
+user.setName("Ravi Teja");
+
+Then open another session:
+
+Session session2 = sessionFactory.openSession();
+Transaction tx = session2.beginTransaction();
+
+User managedUser = session2.merge(user);
+
+tx.commit();
+session2.close();
+
+
+the Hibernate copies the state of user into a managed instance.
 
 -------------------------------------------
 4. What is dirty checking in Hibernate?
@@ -101,6 +195,9 @@ Lazy loading means related data is loaded only when it is accessed.
 
 User user = session.get(User.class, 1L);
 user.getOrders(); // orders loaded here
+
+if a lazy association is accessed after the Hibernate Session is closed,
+Hibernate cannot fetch the data and throws LazyInitializationException.
 
 
 --------------------------------------------
@@ -253,3 +350,29 @@ then List<Department> departments =
              departmentRepository.findAllWithEmployees();
 
 this will populate both employees and departments in both the classes
+
+
+select d
+from Department d
+join fetch d.employees
+
+this is equalent to
+
+SELECT ...
+FROM department d
+INNER JOIN employee e
+    ON d.id = e.department_id;
+
+join fetch performs an inner fetch join, while left join fetch performs a left outer fetch join.
+fetch tells Hibernate to initialize the associated entity or collection in the same query.
+
+
+---------------------------------------------------
+flush() vs commit()
+---------------------------------------------------
+
+flush() synchronizes the Hibernate Session with the database by executing pending insert, update, and delete statements,
+but it does not commit the transaction. The transaction is still active and can be rolled back.
+
+commit() completes the transaction and makes the changes permanent.
+Hibernate usually performs a flush automatically before commit.

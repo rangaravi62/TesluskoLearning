@@ -1,0 +1,159 @@
+=======================================================
+Idempotency
+=======================================================
+
+Idempotency means processing the same request multiple times produces the same final result as processing it once.
+In microservices, it's mainly used to handle retries and duplicate messages safely.
+We normally use an idempotency key or unique event ID, store it in a database/cache,
+and if the same request comes again, return the previous result instead of executing the business operation again.
+
+
+
+For example, imagine an Order Service calls a Payment Service:
+
+Order Service  --->  Payment Service
+                     Charge ₹1000
+
+The Payment Service successfully charges ₹1000, but because of a network issue, the response never reaches the Order Service.
+
+The Order Service thinks the request failed and retries:
+
+Without idempotency:
+First request  → ₹1000 charged
+Retry          → ₹1000 charged again ❌
+
+Total charged = ₹2000
+
+With idempotency:
+First request  → ₹1000 charged
+Retry          → Already processed → return previous result
+
+Total charged = ₹1000 ✅
+
+
+--------------------------------
+How do we implement it?
+--------------------------------
+
+Usually, the client generates a unique idempotency key for one logical operation.
+
+POST /payments
+Idempotency-Key: PAY-ORDER-12345 (Passed in the request headers)
+{
+    "orderId": "12345",
+    "amount": 1000
+}
+
+The Payment Service stores that key along with the result.
+
+IDEMPOTENCY_TABLE
+------------------------------------------------
+key                 status       response
+------------------------------------------------
+PAY-ORDER-12345     SUCCESS      paymentId=9876
+
+
+When the first request arrives:
+
+Request
+  |
+  | Idempotency-Key = PAY-ORDER-12345
+  v
+Payment Service
+  |
+  | Check DB
+  |
+  | Key exists?
+  |
+  +---- NO ----> Process payment
+                  |
+                  v
+                Charge ₹1000
+                  |
+                  v
+                Save key + result
+                  |
+                  v
+                Return success
+
+If the same request comes again:
+
+Request
+Idempotency-Key = PAY-ORDER-12345
+        |
+        v
+Payment Service
+        |
+        v
+Check DB
+        |
+        v
+Key already exists ✅
+        |
+        v
+DON'T process again
+        |
+        v
+Return previous result
+
+
+
+
+For Concurrent duplicate requests
+So normally the idempotency key should have a unique constraint in the database, and the creation/check should be done atomically.
+
+CREATE TABLE idempotency_keys (
+    idempotency_key VARCHAR(100) PRIMARY KEY,
+    status VARCHAR(20), //Success, Failed
+    response_data TEXT
+);
+
+
+
+
+---------------------------------------------
+Idempotency with Kafka
+---------------------------------------------
+
+Suppose:
+
+Kafka
+
+OrderCreated
+   |
+   v
+Payment Consumer
+   |
+   v
+Payment completed
+
+The consumer processes the event but crashes before committing the Kafka offset.
+
+1. Read OrderCreated event
+2. Charge customer ✅
+3. Consumer crashes ❌
+4. Kafka offset wasn't committed
+5. Consumer restarts
+6. Kafka sends the same event again
+
+Without idempotency:
+
+OrderCreated -> Charge ₹1000  Same event again -> Charge ₹1000 again ❌
+
+The consumer can instead store the event IDs so that if the eventId exists it can return directly without processing
+
+At-least-once delivery + idempotent consumer
+
+Retry + Idempotency = Safe Retry
+
+
+
+
+----------------------------------------------
+Storing Idempotency Key in DB vs Cache
+----------------------------------------------
+
+Critical business operation → DB
+Temporary/high-speed deduplication → Redis(Shared Cache for all the instances)
+Need both scale + durability → Redis + DB
+

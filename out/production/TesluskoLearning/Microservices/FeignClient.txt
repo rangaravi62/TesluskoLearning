@@ -1,0 +1,31 @@
+Feign Client
+------------------------
+
+FeignClient is a declarative Http Client used to call the apis of other microservices
+We define a Java interface describing the remote API, and Feign generates the implementation required to make the HTTP request.
+
+Payment Service:
+
+@RestController
+@RequestMapping("/payments")
+public class PaymentController {
+
+    @PostMapping
+    public PaymentResponse makePayment(
+            @RequestBody PaymentRequest request) {
+
+        // process payment
+        return new PaymentResponse("SUCCESS");
+    }
+}
+
+
+Order Service:
+
+@FeignClient(name = "payment-service")
+public interface PaymentClient {
+
+    @PostMapping("/payments")
+    PaymentResponse makePayment(
+            @RequestBody PaymentRequest request);
+}

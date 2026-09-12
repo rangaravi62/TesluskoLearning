@@ -100,3 +100,143 @@ Spring MVC has built-in API-versioning support through the version attribute
 public UserV1 getUserV1(@PathVariable Long id) {
     // ...
 }
+
+
+
+------------------------------------------------------------------------------------
+self invocation using @Transactional
+------------------------------------------------------------------------------------
+
+@Service
+public class OrderService {
+
+    public void methodA() {
+        System.out.println("A");
+
+        methodB();   // self invocation
+    }
+
+    @Transactional
+    public void methodB() {
+        System.out.println("B");
+    }
+}
+
+Spring sees @Transactional and creates a proxy around OrderService. Conceptually, imagine Spring generated something like this:
+
+class OrderServiceProxy {
+
+    private OrderService target;
+
+    public void methodA() {
+        target.methodA();
+    }
+
+    public void methodB() {
+
+        transactionManager.begin();
+
+        try {
+            target.methodB();
+
+            transactionManager.commit();
+        } catch (Exception e) {
+            transactionManager.rollback();
+            throw e;
+        }
+    }
+}
+
+
+Now here inside methodA() we're calling this.methodB()
+it doesn't go through the proxy
+Transaction never sees it
+
+
+To avoid this we need to move methodB() to another bean
+
+@Service
+public class OrderService {
+
+    private final PaymentService paymentService;
+
+    @Transactional
+    public void methodA() {
+        paymentService.methodB();
+    }
+}
+
+@Service
+public class PaymentService {
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void methodB() {
+    }
+}
+
+
+
+
+------------------------------------------------------------------------------------------------------
+What happens when a method annotated with @Transactional calls another method annotated with
+@Async and the latter fails? Will the transaction roll back?
+------------------------------------------------------------------------------------------------------
+
+@Async tells Spring:
+Don't execute this method on the caller's thread. Submit it to a TaskExecutor and execute it on another thread.
+Spring's async support is enabled with @EnableAsync, and @Async is proxy-based
+
+@Async executes the method on another thread through a TaskExecutor.
+Spring's normal @Transactional context is thread-bound and does not propagate to the new async thread.
+Therefore, the caller's transactional method usually returns and commits independently.
+If the async method later throws an exception, that exception does not reach the original transactional proxy,
+so the original transaction is not rolled back.
+
+If the async operation needs database transactions,
+it should have its own transaction. If the caller explicitly waits on a Future and propagates the failure before
+its transaction commits, then the outer transaction can roll back.
+
+ex :
+
+@Service
+public class EmailService {
+
+    @Async
+    public void sendEmail() {
+        System.out.println(Thread.currentThread().getName());
+        // send email
+    }
+}
+
+@Service
+public class OrderService {
+
+    private final EmailService emailService;
+
+    public void createOrder() {
+
+        System.out.println("Before email");
+
+        emailService.sendEmail();
+
+        System.out.println("After email");
+    }
+}
+
+Without Async order service has to wait until the email finishes
+
+With Async the email execution will be done by another thread
+
+
+
+--------------------------------------------------------------------------------
+Explain the difference between @RestController and @Controller in Spring Boot.
+---------------------------------------------------------------------------------
+
+
+@Controller is mainly used for Spring MVC applications that return views
+@RestController is used for REST APIs that return data directly in the response body.
+
+@RestController -> @Controller + @ResponseBody
+
+@ResponseBody -> returns data directly in the response body.

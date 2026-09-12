@@ -25,3 +25,84 @@ Eureka Server -> Central server that maintains service registry
 Service Provider -> Microservice that registers itself with Eureka
 Service Consumer -> Microservice that discovers and call the other services
 Eureka Client -> Library included in each microservices to interact with Eureka server
+
+
+
+------------------------------------------------
+Eureka
+------------------------------------------------
+
+Eureka is a service registry developed by netflix used for service discovery in microservices
+
+We'll mainly be having
+
+Eureka server -> maintains the service registry
+Eureka client -> microservices that register themselves with eureka and discover other services
+
+When a microservice starts, eureka client registers the service with eureka server using its
+application name, host/ip, port and other instance metadata
+
+
+Eureka clients periodically sends heartbeats to the eureka server
+If any instance doesn't send the heartbeat with in the expiration period, Eureka considers it unavailable and can remove it from the registry.
+
+Each instance caches information locally and periodically refreshes it.
+
+
+
+Example :
+
+Payment Service
+      |
+      | 1. REGISTER
+      v
+Eureka Server
+
+Payment Service
+      |
+      | 2. HEARTBEAT
+      v
+Eureka Server
+
+
+Eureka Server
+      |
+      | 3. Registry information
+      v
+Order Service
+      |
+      | Local cache
+      v
+Spring Cloud LoadBalancer
+      |
+      | 4. Select Payment instance
+      v
+Payment Service
+
+
+No heartbeat
+      ↓
+Lease eventually expires
+      ↓
+Eureka can evict instance
+      ↓
+Registry gets updated
+      ↓
+Clients eventually refresh
+
+
+
+
+
+--------------------------------------------------------------------------------------------------------------------------------
+Q)We have 3 Payment Service instances registered with Eureka. One Payment instance suddenly crashes.
+  What happens from the moment it crashes until Order Service stops sending traffic to that instance?
+--------------------------------------------------------------------------------------------------------------------------------
+
+
+If one payment service crashes then the eureka server stop recieving the heartbeat from that instance,
+then eventually it removes the registry after the expiration period, and in the next refresh the order service
+get the updated registries, and the load balancer(client side) will stop selecting the crashed instance.
+meanwhile the requests which were sent to the crashed service result in connection errors or timeouts,
+We can handle such failures using proper timeouts, retries, and circuit breakers.
+

@@ -1,0 +1,78 @@
+===========================================================
+Decomposition Pattern
+===========================================================
+
+Decomposition Pattern is one of the first patterns to understand in microservices
+
+Decomposition pattern is used to decide how a monolithic system should be divided into microservices.
+Two common approaches are decomposition by business capability and decomposition by subdomain using Domain-Driven Design.
+The goal is to create loosely coupled services where each service owns a specific business responsibility.
+
+
+1. Decompose by Business Capability --->
+
+Split the application based on business capabilities
+
+Suppose we have an e-commerce monolith:
+
+E-Commerce Application
+        |
+        ├── User Management
+        ├── Product Management
+        ├── Order Management
+        ├── Payment
+        ├── Inventory
+        └── Shipping
+
+We can decompose it into:
+
+                    API Gateway
+                         |
+       -------------------------------------
+       |        |        |       |         |
+     User    Product   Order   Payment   Shipping
+    Service  Service  Service  Service   Service
+                         |
+                    Inventory
+                     Service
+
+One microservice should own one clearly defined business responsibility.
+
+
+
+2. Decompose by Subdomain --->
+
+Instead of simply looking at business functions, we identify different domains/subdomains within the business.
+
+Decomposition by subdomain means identifying different business areas in the application and creating microservices around
+those areas. Each subdomain owns its own business logic and data.
+
+smaller business area inside a bigger business domain.
+
+Ex:
+
+E-Commerce
+   |
+   ├── Orders
+   ├── Payments
+   ├── Inventory
+   ├── Shipping
+   └── Customers
+
+These are subdomains
+
+Then we can create microservices around those subdomains:
+
+Order Subdomain      → Order Service
+Payment Subdomain    → Payment Service
+Inventory Subdomain  → Inventory Service
+Shipping Subdomain   → Shipping Service
+
+The key idea is that each subdomain has its own business rules.
+For example, the Payment subdomain may contain rules like:
+
+Process payment
+Refund payment
+Check payment status
+Validate payment method
+

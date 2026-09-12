@@ -96,7 +96,211 @@ if two objects are equal then their hashcode should also be equal
 
 
 --------------------------------------------------------------------------------------------------------------------
+-> Q. Internal working of a ConcurrentHashMap
 
+ConcurrentHashMap internally uses a Node array similar to HashMap, but provides thread safety using CAS,
+volatile visibility and fine-grained synchronization.
+
+Node[] table + CAS(Compare and Set) + synchronized on individual bins/buckets
+
+Like HashMap, Java 8+ ConcurrentHashMap internally uses an array:
+Node<K,V>[] table;
+
+static class Node<K,V> {
+    final int hash;
+    final K key;
+    volatile V val;
+    volatile Node<K,V> next;
+}
+
+Atomic compound operations
+
+putIfAbsent()
+computeIfAbsent()
+compute()
+merge()
+replace()
+
+HashMap iterator is fail-fast, meaning it'll throw ConcurrentModificationException if one thread is iterating a map and another
+thread tries to update the map
+
+ConcurrentHashMap doesn't throw ConcurrentModificationException
+
+-----------------------
+CAS(Compare and Set)
+-----------------------
+
+CAS(
+    bucket[5],
+    expectedValue = null,
+    newValue = new Node(...)
+)
+
+“Set bucket 5 to this new node only if bucket 5 is still null.”
+This operation happens atomically
+
+
+
+---------------------
+put method working
+---------------------
+
+when map.put(A,1) is called
+
+calculates the hash of the key
+locate the bucket, if the bucket is empty, it doesn't acquire lock instead it performs CAS atomically inserts the key and value
+if the bucket is not empty then it locks the first node of the bucket, for every node it checks whether that key exists or not
+using equals method, if the same key exists it'll update the value else it will append the new node
+to the linked list or the red black tree
+
+---------------------
+get method working
+---------------------
+
+get() doesn't acquire lock
+because ConcurrentHashMap carefully uses volatile fields(there won't be any visibility issues), atomic/volatile table access
+
+calculate hash
+     ↓
+find bucket
+     ↓
+read first node
+     ↓
+compare hash + key
+     ↓
+traverse list / tree
+     ↓
+return value
+
+-------------------------------------------------
+Why doesn't ConcurrentHashMap allow null?
+-------------------------------------------------
+
+HashMap allows:
+
+map.put(null, "A");
+map.put("A", null);
+
+ConcurrentHashMap does not allow either
+
+suppose V value = map.get("A") returns null
+
+In a concurrent environment, what does that mean?
+
+Possibility 1:
+"A" doesn't exist
+
+Possibility 2:
+"A" exists and its value is null
+
+Concurrent updates make this ambiguity problematic.
+
+So ConcurrentHashMap avoids it entirely: null means there is no mapping.
+
+
+For example, in a normal HashMap:
+
+map.put("A", null);
+
+System.out.println(map.get("A")); // null
+System.out.println(map.get("B")); // null
+
+Both return null, even though:
+"A" → exists with null value
+"B" → does not exist
+
+now
+
+if (map.get("A") == null) {
+    if (map.containsKey("A")) {
+        // value is null
+    } else {
+        // key doesn't exist
+    }
+}
+
+That can work in a normal non-concurrent situation.
+
+But with multiple threads, the map can change between those two calls:
+
+Thread 1                        Thread 2
+
+map.get("A") → null
+
+                                map.put("A", 100)
+
+map.containsKey("A") → true
+
+Thread 1 now concludes that A existed with null value, but the key itself was not present when get was executed
+That's the concurrency problem.
+
+
+
+
+
+-----------------------------------------------------------
+Why is ConcurrentHashMap better than SynchronizedMap?
+-----------------------------------------------------------
+
+
+A synchronized map roughly behaves like: acquires the lock on the entire map
+
+                ONE MAP LOCK
+
+Thread 1 → get()   🔒
+Thread 2 → put()   waits
+Thread 3 → get()   waits
+Thread 4 → put()   waits
+
+ConcurrentHashMap acquires the lock on individual buckets so that the other threads can access/update the other buckets
+
+Thread 1 → read bucket 2
+Thread 2 → update bucket 5
+Thread 3 → update bucket 10
+Thread 4 → read bucket 7
+
+
+
+--------------------------------------------------------------------------------------------------------------------
+-> Q. How is ConcurrentHashMap different from HashMap, and why is it preferred over SynchronizedMap?
+
+
+Hashmap ->
+
+HashMap is not thread-safe.
+
+If multiple threads modify it simultaneously, you can get:
+
+lost updates
+inconsistent data
+race conditions
+problems during resize
+
+
+SynchronizedMap ->
+
+Map<String, Integer> map = Collections.synchronizedMap(new HashMap<>());
+
+Internally, its methods are synchronized using essentially one common lock.
+This provides thread safety, but under high concurrency it can become a bottleneck.
+
+ConcurrentHashMap ->
+
+Map<String, Integer> map = new ConcurrentHashMap<>();
+
+ConcurrentHashMap is specifically designed for high-concurrency access.
+
+Internally it uses a combination of:
+
+CAS
+synchronized on individual buckets/bins when necessary
+volatile-style visibility mechanisms
+concurrent resizing techniques
+
+So threads working on different buckets can generally proceed simultaneously.
+
+
+--------------------------------------------------------------------------------------------------------------------
 -> Q. How to sort a hashmap ?
 using Treemap, we can sort it in natural sorting order
 if we want custom sorting then we can pass a comparator to the constructor

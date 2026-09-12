@@ -1,0 +1,158 @@
+=============================================
+JWT (JSON Web Token)
+=============================================
+
+JWT stands for JSON Web Token
+It is a compact token format commonly used for authentication and authorization in REST APIs and microservices.
+
+User logs in once
+     ↓
+Server verifies username/password
+     ↓
+Server creates JWT
+     ↓
+Client sends JWT with future requests
+     ↓
+Server validates JWT
+     ↓
+Request is allowed/rejected
+
+
+A JWT has 3 parts:
+HEADER.PAYLOAD.SIGNATURE
+
+Conceptually:
+
+Header
+{
+  "alg": "HS256",
+  "typ": "JWT"
+}
+
+Payload
+{
+  "userId": 101,
+  "username": "ravi",
+  "role": "ADMIN",
+  "exp": 1787260000
+}
+
+Signature
+HMACSHA256(
+    base64(header) + "." + base64(payload),
+    secretKey
+)
+
+The three parts are:
+
+Header — tells which signing algorithm is used.
+Payload — contains claims such as user ID, roles, expiry time.
+Signature — proves that the token has not been modified.
+
+The token sent to client becomes -> base64(header).base64(payload).signature
+
+NOTE : the payload is usually encoded, not encrypted. Anyone holding the token may be able to decode the payload,
+       so you should not put passwords or sensitive secrets inside it.
+
+--------------------------------------------------
+How JWT authentication works
+--------------------------------------------------
+
+Suppose the client calls: POST /login
+with
+
+{
+  "username": "ravi",
+  "password": "12345"
+}
+
+The authentication service checks the credentials against the database.
+
+Client
+   |
+   | username + password
+   v
+Auth Service
+   |
+   | Verify credentials
+   v
+Database
+
+if validates server generates a JWT
+The token is sent to the client
+The client then sends this JWT on subsequent requests, normally in the HTTP header
+
+When the client sends the JWT back the server receives all three parts
+Header.payload.signature
+
+Now the server performs the same calculation again using its secret key:
+
+received header + received payload
+               +
+         SECRET_KEY
+               ↓
+           HMAC_SHA256
+               ↓
+      Newly calculated signature
+
+if Calculated Signature == Signature inside JWT it is valid else invalid
+
+
+----------------
+Signature
+----------------
+
+It's essentially a cryptographic output/hash-like value generated from:
+
+Header
++
+Payload
++
+Secret/private key
+
+
+--------------------------------
+Does the server store JWTs?
+--------------------------------
+
+Normally, no. That's one of JWT's major advantages.
+
+Traditional session authentication often works like:
+
+Client
+ |
+ | Session ID
+ v
+Server
+ |
+ v
+Session Store
+
+The server has to maintain session state.
+
+With JWT:
+
+Client
+ |
+ | JWT
+ v
+Server
+ |
+ | Validate token
+ v
+Continue
+
+The server can verify the JWT itself.
+This is why JWT authentication is described as stateless authentication.
+
+------------------------------------------------------------------------
+But how does /login work if the gateway expects JWT?
+------------------------------------------------------------------------
+
+Some routes are configured as public endpoints:
+/login
+/register
+/refresh-token
+/health
+
+These will be whitelisted 

@@ -1,0 +1,93 @@
+===========================================================
+What is CAP theorem?
+===========================================================
+
+CAP theorem applies to distributed systems, where the same system/data is spread across multiple machines or nodes.
+
+CAP stands for:
+
+C — Consistency
+A — Availability
+P — Partition Tolerance
+
+CAP Theorem states that When a network partition occurs, a distributed system must choose between Consistency and Availability.
+
+Suppose we have two database nodes:
+
+        Application
+            |
+      ----------------
+      |              |
+   Node A          Node B
+  Balance ₹1000   Balance ₹1000
+
+Both nodes contain the same account information.
+
+Normally, Node A and Node B communicate with each other and stay synchronized.
+
+Now imagine the network connection between them breaks: This is called a network partition.
+
+
+1. Consistency ->
+Every read should return the latest successfully written value, regardless of which node receives the request.
+
+2. Availability ->
+Every request receives a response, even if some nodes or network connections are having problems.
+
+So availability doesn't necessarily mean the response is correct/latest.
+It means you get a response from a functioning node.
+
+3. Partition Tolerance ->
+The system continues operating even when nodes cannot communicate with each other because of a network failure.
+
+
+------------------------------------
+Now comes the actual CAP problem
+------------------------------------
+
+Node A = ₹1000
+Node B = ₹1000
+
+Now the Network Partition occurs
+
+Now a withdrawal reaches Node A: 200
+
+Now Node A Becomes : 800
+But now A cannot tell B so B will be having 1000
+
+Node A = ₹800
+Node B = ₹1000
+
+CP: Node B refuses to return the balance because it cannot confirm the latest value.
+AP: Node B returns ₹1000 even though it may be stale, and the nodes synchronize later.
+
+CP ->
+If a network partition happens, the system prefers correct/latest data. If it cannot guarantee that,
+it may reject or delay the request. So it sacrifices availability temporarily.
+
+CP system
+This is useful when incorrect data would be dangerous.
+
+EX : Banking / Payments
+
+
+AP ->
+If a network partition happens, the system still responds to requests, even if some responses may contain stale data.
+So it sacrifices immediate consistency temporarily.
+
+EX : Social media feed, Product recommendations
+
+For example, in an e-commerce system:
+
+Browse products     → Availability
+Place order         → Consistency
+Payment             → Consistency
+Recommendations     → Availability
+
+
+CA ->
+In a genuinely distributed system, network partitions can happen.
+
+Partition tolerance is generally unavoidable in distributed systems.
+So we cannot have CA
+

@@ -1,0 +1,147 @@
+========================================================================
+Circuit Breaker Pattern
+========================================================================
+
+
+Prevents cascading failures and fail fast when a dependency is unhealthy.
+
+Cascading Failure : A cascading failure happens when the failure or slowdown of one service causes other
+dependent services to also fail, and the problem keeps spreading through the system.
+
+
+consider we have Order Service -> Payment Service
+
+Order Service calls Payment Service using Feign for making payment:
+
+@FeignClient(name = "payment-service")
+public interface PaymentClient {
+
+    @PostMapping("/payments")
+    PaymentResponse makePayment(@RequestBody PaymentRequest request);
+}
+
+
+Everything works normally now, imagine the payment service becomes slow
+
+Order Service → Payment Service 10 sec, 15 sec, timeout
+
+Meanwhile Order Service continues receiving requests: Request 1 → waiting , Request 2 → waiting ..................
+
+Eventually Order Service starts exhausting things like:
+Threads
+HTTP connections
+CPU
+Memory
+Connection pool
+
+Now even though the order service is healthy it may stop responding leading to cascading failure
+
+Payment Service failure has caused Order Service to fail too.
+
+-------------------------------
+What Circuit Breaker does
+-------------------------------
+
+If the dependency service is unhealthy it'll not send the requests to that service instead it fails fast
+
+Order
+ ↓
+Circuit Breaker
+ ↓
+FAIL FAST
+
+
+-----------------------------------------------------
+Three Circuit Breaker states
+-----------------------------------------------------
+
+CLOSED -> OPEN -> HALF_OPEN -> CLOSED / OPEN
+
+---------------
+CLOSED
+---------------
+
+Everything is normal, requests are allowed
+
+Order Service -> Circuit Breaker (CLOSED)-> Payment Service
+
+
+--------------
+OPEN
+--------------
+suppose
+
+Request 1 → SUCCESS
+Request 2 → SUCCESS
+Request 3 → FAILURE
+Request 4 → SUCCESS
+Request 5 → FAILURE
+
+Circuit Breaker keeps tracking failures.
+and for suppose if the Failure threshold = 50% is configured in some 10 requests
+and if it exceeds the threshold then the circuit becomes CLOSED -> OPEN
+
+Now the circuit breaker knows Payment Service is unhealthy.
+
+and the new requests are not sent to payment service, they immediately fail, this is called fail fast
+
+Order Service -> Circuit Breaker (OPEN) -X- Payment Service
+
+--------------
+HALF_OPEN
+--------------
+
+Now the payment service might recover
+
+So the circuit breaker waits for some configured duration and changes the state from OPEN to HALF_OPEN
+
+This is a test state where it'll allow few requests assuming that payment service might have recovered
+If these requests are success then it'll move the state from HALF_OPEN → CLOSED
+else it'll move from HALF_OPEN → OPEN and waits again for the configured duration.
+
+-----------
+Example:
+-----------
+
+@CircuitBreaker(
+    name = "paymentService",
+    fallbackMethod = "paymentFallback"
+)
+public PaymentResponse makePayment(PaymentRequest request) {
+
+    return paymentClient.makePayment(request);
+}
+
+Fallback --->
+
+public PaymentResponse paymentFallback(
+        PaymentRequest request,
+        Throwable ex) {
+
+    return new PaymentResponse(
+            "PAYMENT_TEMPORARILY_UNAVAILABLE"
+    );
+}
+
+when the circuit is CLOSED
+Order Service -> Circuit Breaker -> Feign Client -> Payment Service
+
+When the circuit is OPEN
+Order Service -> Circuit Breaker -> Fallback
+The feign call doesn't happen
+
+Fallback does not necessarily mean only "service is down."
+It could be Connection refused, Timeout, 500, 503 etc
+
+we can configure which exception can count as failures
+
+
+
+------------------------------------------------------------------------------------------------------------------------
+The Circuit Breaker monitors downstream call failures. Once the configured failure threshold is exceeded,
+it moves from CLOSED to OPEN and fails subsequent requests immediately instead of calling the unhealthy dependency.
+After a configured waiting period it enters HALF_OPEN, allows a small number of trial requests,
+and either closes the circuit if they succeed or opens it again if they fail.
+------------------------------------------------------------------------------------------------------------------------
+
+

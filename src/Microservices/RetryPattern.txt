@@ -1,0 +1,142 @@
+==========================================================
+RETRY PATTERN
+==========================================================
+
+If a request fails because of a temporary/transient problem, try the operation again after a short delay.
+
+Order Service -> Payment Service
+
+Order Service calls Payment Service
+Suppose if the first request fails because of a temporary network issue
+Instead of immediately failing the order, We can retry the operation
+The client receives a successful response without even knowing that temporary failures occurred.
+
+
+Why do we need Retry?
+Distributed systems have many temporary failures:
+
+Network glitch
+Temporary connection failure
+Service restarting
+Load balancer issue
+503 Service Unavailable
+Temporary database overload
+Request timeout
+
+Let's say Retry Attempts is configured as 3
+the failed request will be retried 3 times with some delay in between each try
+
+Fixed Delay may have a problem
+
+Imagine 1000 requests failing together
+all the 1000 requests will be retried at the same time
+This produces Traffic Spike
+
+That's why exponential backoff is commonly used.
+
+---------------------
+Exponential Backoff
+---------------------
+
+Instead of using the same delay for every retry
+Increase thr delay for every retry exponentially
+
+delay = initialDelay × 2^retryNumber
+
+Suppose now the 1000 requests fails simultaneously
+even now the same problem may occur
+Request1 ->(0.5s) retry ->(1s) -> retry(2s)
+
+All the 1000 requests will be retried at the same time
+
+To overcome this we add JITTER a small random delay
+
+----------------
+JITTER
+----------------
+
+Instead of everybody retrying at exactly 1 second:
+
+Client A → 850 ms
+Client B → 1.1 sec
+Client C → 930 ms
+Client D → 1.3 sec
+
+Traffic becomes distributed over time.
+
+So the good strategy is
+
+Retry
+  +
+Exponential Backoff
+  +
+Jitter
+
+
+--------------------------------------------------------------------------------
+The biggest Retry problem: duplicate operations
+--------------------------------------------------------------------------------
+
+Consider Order Service calling Payment Service
+
+Order Service sends:
+POST /payments
+amount = ₹1000
+
+Payment Service processes it successfully: 1000
+
+But suppose the network fails after Payment Service processes the request and before Order Service receives the response.
+From Order Service perspective it is Timeout
+
+now the Order Service tries the request again, now it becomes 2000
+
+The Solution is Retry + Idempotency
+
+------------------------------------------
+Retry + Idempotency
+------------------------------------------
+
+The solution is usually to make operations idempotent.
+
+Order Service sends an idempotency key:
+
+POST /payments
+Idempotency-Key: payment-123
+
+First attempt:
+payment-123 -> Payment processed -> ₹1000 charged
+
+Payment Service stores: payment-123 → SUCCESS
+
+Now suppose the response gets lost and the Order Service retries payment-123
+Payment Servcie has already processed payment-123 so it returns the previous result
+
+
+Spring Boot with Resilience4j :
+
+@Retry(
+    name = "paymentService",
+    fallbackMethod = "paymentFallback"
+)
+public PaymentResponse makePayment(PaymentRequest request) {
+    return paymentClient.makePayment(request);
+}
+
+
+---------------------------------------------------------
+Retry vs Circuit Breaker
+---------------------------------------------------------
+
+Retry solves:
+"This particular call failed. Maybe the failure is temporary, so try again."
+
+Circuit Breaker solves:
+"This dependency has been failing repeatedly. Stop calling it temporarily."
+
+
+------------------------------------------------------------------------------------------------------------------------
+I use Retry for transient failures such as temporary network issues, connection resets, timeouts, or temporary 503 responses.
+I keep the number of attempts limited and normally use backoff, preferably exponential backoff with jitter.
+I don't retry validation or business errors, and for operations with side effects such as payments,
+I make the operation idempotent before enabling retries.
+------------------------------------------------------------------------------------------------------------------------

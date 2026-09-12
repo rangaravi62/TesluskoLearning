@@ -1,0 +1,22 @@
+====================================================================
+CQRS PATTERN
+====================================================================
+
+CQRS -> Command Query Responsibility Segregation
+
+                Client
+                  |
+          ----------------
+          |              |
+       Commands        Queries
+          |              |
+          v              v
+     Order Command    Order Query
+       Service          Service
+          |              |
+          v              v
+       Write DB        Read DB
+
+
+
+TODO -> should learn this

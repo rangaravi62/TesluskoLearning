@@ -1,0 +1,423 @@
+==================================================
+Kafka
+==================================================
+
+Kafka is distributed event streaming platform used for low latency and high throughput
+
+Customer places order
+        |
+        v
+   Order Service
+        |
+        | OrderCreated event
+        v
+      Kafka
+        |
+   ----------------------------
+   |            |             |
+   v            v             v
+Payment     Inventory      Notification
+Service      Service        Service
+
+
+
+---------------------
+Topic
+---------------------
+
+A Topic is a logical stream of events
+
+Ex: order-events
+
+When an order is created Order Service will publish the event to order-event topic
+
+
+-----------------------
+Partitions
+-----------------------
+
+But internally, a Kafka topic is divided into partitions.
+
+order-events
+
+Partition 0
+Partition 1
+Partition 2
+
+Primarily for scalability and parallel processing.
+
+Partition 0 ---> Consumer 1
+Partition 1 ---> Consumer 2
+Partition 2 ---> Consumer 3
+
+Kafka guarantees ordering inside one partition.
+
+---------------------------
+offset
+---------------------------
+
+Inside every partition, Kafka assigns each message a sequential number.
+position of a message inside a partition.
+
+Offsets belong to consumer groups
+Suppose inventory-group, notification-group etc all are consuming order-events
+Each group has its own committed offset.
+
+Consumer offsets are tracked per consumer group + topic + partition
+
+Modern Kafka stores consumer group offsets internally in a Kafka topic called : __consumer_offsets
+
+
+
+------------------------------------------------------------------------------------------------
+Processing vs committing (At least once delivery vs At-most-once delivery)
+------------------------------------------------------------------------------------------------
+
+Suppose Inventory Service receives ORD150 offset = 10
+
+Now Inventory Consumer reads ORD150, updates the database(stock from 10 to 8) and commits offset 11
+
+But here the fai5. How do we handle duplicate processing?lures can happen in between
+
+Scenario 1 ---> Process First, Commit Later
+--------------------------------------------
+
+Inventory Consumer reads msg, processes ORD150, updates the database now before commiting the offset the consumer crashes
+
+now the offset will be 10 only
+then consumer restarts reads the same msg again and process it again, updates the stock from 8 to 6
+
+That's a duplicate processing problem
+
+This behavior is called "At least once delivery" -> the message is not lost, but can be processed more than once
+
+Why at-least-once is common ------>
+
+Because losing an order is usually worse than processing it twice.
+That's potentially worse than receiving the payment event twice,
+because duplicate processing can often be handled with idempotency.
+
+
+
+Scenario 2 ---> Commits First, Process Later
+-------------------------------------------------
+
+Inventory Consumer reads ORD150 , commits the offset 11, now the consumer crashes before updated the stock from 10 to 8
+Consumer restarts and thinks it has processes the offset 10 since the current offset is 11, so the ORD150 is skipped
+Inventory was never updated.
+
+This is "At-most-once delivery" -> A message is processed zero or one times.
+
+
+
+-----------------------------------------------------------------------
+(Idempotent Consumer) How do we handle duplicate processing
+-----------------------------------------------------------------------
+
+
+Let's use Order Payment
+
+Event :
+
+{
+  "eventId": "EVT9001",
+  "orderId": "ORD500",
+  "type": "PAYMENT_COMPLETED"
+}
+
+Consumer receives EVT9001, checks the database whether EVT9001 is processed or not
+If not, update the order and and insert the event EVT9001
+Else if processed return the result without processing.
+
+if (alreadyProcessed(eventId)) {
+    return;
+}
+
+process(event);
+
+markAsProcessed(eventId);
+
+This is an idempotent consumer
+
+
+--------------------------------------------------------------------
+Replication, Leader/Follower, ISR, and broker failure
+--------------------------------------------------------------------
+
+let's say we have order-events topic
+
+and order-events have 3 partitions p0, p1, p2 and the kafka cluster has 3 brokers
+if the replication.factor = 3 then each partition will be having 3 copies across the brokers
+
+Every partition has exactly one leader at a time, remaining partitions will be the followers
+
+Broker 1
+P0 Leader
+P1 Follower
+P2 Follower
+
+Broker 2
+P0 Follower
+P1 Leader
+P2 Follower
+
+Broker 3
+P0 Follower
+P1 Follower
+P2 Leader
+
+Producers and consumers normally interact with the leader partition.
+The followers replicate data from the leader.
+
+Replication is needed to achieve Fault Tolerance + High Availability
+
+
+ISR -> In-Sync Replicas
+---------------------------------------------------
+
+Initially ISR = [Broker1, Broker2, Broker3]
+Now imagine Broker 3 becomes very slow
+
+Leader has offset 100, broker 2 has offset 100 but broker 3 is far behind with offset 60
+
+Kafka may remove Broker 3 from ISR.
+
+Now ISR = [Broker1, Broker2] but Broker 3 will be present as a Replica
+
+Why ISR matters during leader failure --->
+
+Now the ISR = [Broker1, Broker2] and Broker1 is the leader
+If Broker 1 crashes Kafka prefers to elect Broker 2 because Broker 2 is in ISR and has an up-to-date copy.
+
+Broker 3 was lagging, so promoting it could cause data loss.
+
+
+Replication factor (How many copies of partitions exist)
+------------------------------------------------------------
+
+if replication.factor = 1 po -> only one copy bad for production
+replication.factor = 3 -> so there will be 3 copies
+
+
+acks
+--------------------------
+Suppose we have 3 Brokers
+replication.factor = 3
+
+Broker1 -> leader p0, Offset 100
+Broker2 -> leader p1, Offset 100
+Broker3 -> leader p2, Offset 100
+
+Now if the Broker 1 crashes kafka can elect Broker 2 as the leader since all the followers are in sync with the data
+
+But What if the Broker 1 crashes before followers receive the msg
+Ex : Producer writes ORD150 to Broker 1, Followers haven't copied the data yet, now the Broker1 crashes,
+Potentially that message is lost.
+
+This is where producer setting acks comes into the picture
+
+acks = 0 -> producer sends the msg and doesn't wait for the acknowledgement
+
+acks = 1 -> Producer waits until the leader writes the message, But followers may not have copied it yet.
+
+acks = all -> producer waits until the message satisfies the required replication guarantees among the in-sync replicas.
+
+
+replication.factor = 3 -> 3 total copies
+min.insync.replicas = 2 -> at least 2 healthy replicas required
+acks = all -> producer waits for strong acknowledgement
+
+
+---------------------------------------------------------
+Producer retries, duplicates, and idempotent producer
+---------------------------------------------------------
+
+without idempotence, duplicates can happen.
+
+Suppose Order Service sends ORD150 -> kafka stores successfully -> Ack was not sent due to some network issue
+message has been written but producer doesn't receive the acknowledgement
+Now the producer thinks that the msg has not gone to the leader and retries it again \
+and results in duplicate messages
+
+ORD150 - offset 100
+ORD150 - offset 101
+
+To solve producer side retry duplicates we need to use Idempotent Producer
+
+Idempotent Producer
+----------------------------
+Kafka gives the producer an identity and tracks the sequence of messages sent to each partition.
+
+Producer ID = P123 (Order Service)
+
+Partition 0:
+
+Sequence 0 → ORD100
+Sequence 1 → ORD101
+Sequence 2 → ORD102
+
+Suppose producer sends:
+Producer P123
+Sequence 2
+ORD102
+
+Kafka stores it.
+
+let's say now the ack gets lost
+
+Order Service P123 sends it again, but now the kafka check whether this Sequence 2 has been store fot this P123 or not
+if yes then it'll not write another entry else writes
+
+enable.idempotence=true -> configuration
+
+Idempotent producer prevents duplicate records caused by producer retries.
+
+
+
+---------------------------------------------------
+Producer idempotency vs consumer idempotency
+---------------------------------------------------
+
+Producer idempotency ->
+
+Producer sends -> kafka writes -> ACK lost -> Producer retries -> Kafka accidentally stores duplicate
+
+Consumer idempotency ->
+
+Consumer processes event -> DB update succeeds -> Consumer crashes before committing offset -> Kafka delivers same event again
+
+
+
+| Problem                                      | Solution                  |
+| -------------------------------------------- | ------------------------- |
+| Broker crashes and message shouldn't be lost | Replication               |
+| Need strong write durability                 | `acks=all`                |
+| Producer retry may duplicate record          | Idempotent producer       |
+| Consumer may process same event again        | Idempotent consumer       |
+| Related events must stay ordered             | Same key → same partition |
+
+
+
+------------------------------------------------------
+consumer rebalancing
+------------------------------------------------------
+
+Consumer rebalancing happens when Kafka redistributes partitions among consumers in the same consumer group.
+
+Topic: order-events
+Partitions: P0, P1, P2
+
+Consumer Group: inventory-group
+
+C1 → P0, P1
+C2 → P2
+
+Now a new consumer C3 joins
+
+Kafka reassigns partitions
+
+C1 → P0
+C2 → P1
+C3 → P2
+
+That redistribution is called rebalancing.
+
+It can happen when a consumer:
+joins the consumer group
+when a consumer crashes/leaves
+when a consumer becomes unresponsive
+when partitions are added
+
+
+After rebalancing, a partition may be assigned to a different consumer, and that consumer resumes from the last committed offset.
+
+
+
+-------------------------------------
+Consumer Lag
+-------------------------------------
+
+Consumer lag means how far a consumer is behind the latest message in the partition
+
+Latest offset = 1000
+Consumer committed offset = 850
+Lag = 150
+
+High lag means the consumer is not processing fast enough.
+
+Common reasons:
+
+Slow processing
+Too few consumers
+DB/API latency
+Consumer failures
+Large message volume
+
+Solution : optimize processing or add consumers, as long as enough partitions exist
+
+
+---------------------------------------
+Retry and DLQ
+---------------------------------------
+
+Suppose Inventory Service receives ORD150
+But the db call fails
+
+Event -> Consumer -> Failed -> Retry -> Retry -> Still fails -> DLQ
+
+DLQ = Dead Letter Queue/Topic.
+
+ex : order-events-dlq
+
+Messages that repeatedly fail are moved to DLQ for later investigation/reprocessing.
+
+
+-------------------------------------------------
+At-most-once vs At-least-once vs Exactly-once
+-------------------------------------------------
+
+At-most-once --->
+
+commit the offset first -> process the message
+zero or one time process is guaranteed, Possible message loss, but there won't be duplicates
+
+At-least-once --->
+
+Process first -> then commit the offset
+Duplicates are possible without idempotent consumer
+
+common approach -> At-least-once + idempotent consumer
+
+
+Exactly-once --->
+
+process each event exactly once
+
+
+
+------------------------
+Retention
+------------------------
+
+Kafka does not delete messages immediately after they are consumed.
+This is different from many traditional queues.
+
+Messages can remain based on configuration such as:
+7 days
+30 days
+size limit
+
+So another consumer group can still read old messages later.
+Consumer reading a message does not remove it.
+
+
+-------------------------------
+KRaft vs ZooKeeper
+-------------------------------
+
+Older Kafka used: ZooKeeper for cluster metadata and controller coordination.
+
+Modern Kafka uses: KRaft Kafka's own consensus mechanism.
+
+Modern Kafka uses KRaft instead of ZooKeeper for metadata management and controller election.
+

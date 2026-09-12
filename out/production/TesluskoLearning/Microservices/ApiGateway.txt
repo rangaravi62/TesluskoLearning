@@ -1,0 +1,194 @@
+API GATEWAY
+----------------------------------------
+
+
+API Gateway is the single entry point for all the client requests. it routes the request to appropriate microservices.
+it acts as a middleware between and client and the services.
+
+Key Responsibilities :
+
+Routing
+Load Balancing
+Authentication and Authorization
+Logging and Monitoring
+Rate Limiting
+Caching
+Request and Response Transformation
+Global Exception Handling
+
+
+-----------------------------------------
+Why do we need an API Gateway?
+-----------------------------------------
+
+Imagine there's no gateway.
+The frontend has to call every service directly:
+
+                    Frontend
+                  /     |      \
+                 /      |       \
+                v       v        v
+             Order   Payment    User
+
+This creates several problems.
+The frontend needs to know where every service exists.
+More importantly, suppose every API needs JWT authentication. You could end up implementing similar authentication logic in:
+
+Order Service    → Validate JWT
+Payment Service  → Validate JWT
+Inventory Service→ Validate JWT
+User Service     → Validate JWT
+
+That's duplicated cross-cutting logic.
+
+Instead:
+
+Client
+   |
+   | JWT
+   v
+API Gateway
+   |
+   | Validate JWT
+   |
+   | Route request
+   v
+Order Service
+
+
+---------------------
+Request Routing
+---------------------
+
+Suppose the client sends: GET /orders/123
+Gateway sees /orders/** and routes it to: ORDER-SERVICE
+
+similarly
+/orders/**    → ORDER-SERVICE
+/payments/**  → PAYMENT-SERVICE
+/users/**     → USER-SERVICE
+
+
+---------------------------
+Gateway + Eureka
+---------------------------
+
+                    Eureka
+                      ^
+                      |
+                service discovery
+                      |
+Client ---> API Gateway
+                 |
+            Load Balancer
+                 |
+        selects Order instance
+                 |
+                 v
+        10.0.0.12:8081
+
+API Gateway get the service instances from the Eureka
+
+
+------------------------------------------------------
+Authentication & Authorization
+------------------------------------------------------
+
+Suppose the user logs in and receives a JWT:
+
+Login
+  ↓
+JWT generated
+  ↓
+Client stores JWT
+
+
+GET /orders/123
+Authorization: Bearer <JWT>
+
+The request reaches Gateway.
+
+Client
+   |
+   | JWT
+   v
+API Gateway
+   |
+   | Validate JWT
+   |
+   +---- Invalid ---> 401 Unauthorized
+   |
+   | Valid
+   v
+Order Service
+
+This prevents unauthenticated requests from even reaching internal services.
+
+
+Why authenticate at Gateway instead of every service?
+Authentication is a cross-cutting concern. Handling it at the Gateway provides a centralized security layer
+and avoids duplicating the same authentication logic across every microservice.
+
+There can still be service-level authorization/security depending on the system's security requirements.
+
+
+-----------------------
+Rate Limiting
+-----------------------
+
+Suppose one user/bot starts sending: 10,000 requests/second
+You don't want all of those requests reaching Order Service.
+
+Gateway can enforce something like: User → Maximum 100 requests/minute
+
+Client
+   |
+   | 100 requests ✓
+   |
+API Gateway
+   |
+   | 101st request
+   X
+429 Too Many Requests
+
+
+------------------------------
+Gateway vs Load Balancer
+------------------------------
+
+Both are related to each other but not the same thing
+
+API Gateway determines which service should handle a request
+/orders/**   → ORDER-SERVICE
+/payments/** → PAYMENT-SERVICE
+
+Load Balancer determines which instance of that service should handle it
+
+ORDER-SERVICE
+
+Instance 1
+Instance 2   ← select
+Instance 3
+
+
+Together
+
+GET /orders/123
+       |
+       v
+   API Gateway
+       |
+       | Which service?
+       |
+       v
+  ORDER-SERVICE
+       |
+       | Which instance?
+       |
+       v
+  Load Balancer
+       |
+       v
+Order Instance #2
+
+

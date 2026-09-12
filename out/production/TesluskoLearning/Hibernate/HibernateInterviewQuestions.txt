@@ -1,6 +1,7 @@
 1. What is Hibernate?
 ------------------------
 Hibernate is a ORM framework, ORM stands for Object Relational mapping which maps java objects to database tables
+so we can perform database operations using java objects instead of writing SQL manually.
 
 Advantages:
 Reduces JDBC boiler plate code
@@ -27,9 +28,38 @@ SessionFactory ->
 SessionFActory is a heavyweight object used to create Hibernate sessions
 usually we create one SessionFactory per database while bootup of the application
 
-Session -> used to interact with the database
+Session -> used to interact with the database and perform db operations
 
 Session session = sessionFactory.openSession();
+
+Transaction -> Manages commit/rollback
+
+Query -> Used for HQL/JPQL queries
+
+
+------------------------------------------------------------------------------
+How does Hibernate work internally?
+------------------------------------------------------------------------------
+
+Hibernate is an ORM framework that maps Java entities to database tables. At startup,
+Hibernate creates a SessionFactory containing entity metadata and configuration.
+During a transaction, a Session maintains a persistence context. When we fetch an entity,
+Hibernate first checks the persistence context; if it is not present, it generates SQL and executes it through JDBC.
+The returned database row is converted into a managed Java entity.
+Hibernate tracks managed entities using dirty checking, and during flush
+it generates the required INSERT, UPDATE, or DELETE statements before the transaction commits.
+
+Java Entity
+    ↓
+Session
+    ↓
+Persistence Context
+    ↓
+Hibernate ORM
+    ↓
+JDBC
+    ↓
+Database
 
 ---------------------------------------
 3. What are Hibernate entity states?
@@ -48,6 +78,8 @@ Persistent ->
 Object is associated with Hibernate session.
 session.save(user);
 Now Hibernate tracks changes.
+If the same entity is requested again within the same persistence context,
+Hibernate can return the already managed entity instead of querying the database again.
 
 Detached ->
 Session is closed, but object still exists in Java memory.
@@ -57,6 +89,73 @@ Removed ->
 Object is marked for deletion.
 session.delete(user);
 
+Ex :
+
+Session session = sessionFactory.openSession();
+Transaction tx = session.beginTransaction();
+
+User user = new User();
+user.setName("Ravi");     // Transient
+
+session.persist(user);    // Persistent
+
+user.setName("Ravi Teja");
+// Hibernate tracks this change
+
+tx.commit();
+session.close();          // Detached
+
+
+
+------------------------------------------------------------------------------
+What is the difference between persist() and merge() in Hibernate?
+------------------------------------------------------------------------------
+
+persist() ---> Use persist() for a new/transient entity.
+
+session.persist(user);
+
+the same user object becomes persistent and is tracked by the Hibernate Session.
+
+Session session = sessionFactory.openSession();
+Transaction tx = session.beginTransaction();
+
+User user = new User();
+user.setName("Ravi");     // Transient
+
+session.persist(user);    // Persistent
+
+tx.commit();
+session.close();
+
+
+merge() ---> used when you have a detached entity and want to synchronize its state with the current session.
+
+Ex :
+
+Session session1 = sessionFactory.openSession();
+
+User user = session1.get(User.class, 1L);
+
+session1.close();
+
+Here the user is not associated with the hibernate session anymore it is detached
+
+now if we modify
+user.setName("Ravi Teja");
+
+Then open another session:
+
+Session session2 = sessionFactory.openSession();
+Transaction tx = session2.beginTransaction();
+
+User managedUser = session2.merge(user);
+
+tx.commit();
+session2.close();
+
+
+the Hibernate copies the state of user into a managed instance.
 
 -------------------------------------------
 4. What is dirty checking in Hibernate?
@@ -96,6 +195,9 @@ Lazy loading means related data is loaded only when it is accessed.
 
 User user = session.get(User.class, 1L);
 user.getOrders(); // orders loaded here
+
+if a lazy association is accessed after the Hibernate Session is closed,
+Hibernate cannot fetch the data and throws LazyInitializationException.
 
 
 --------------------------------------------
@@ -146,3 +248,131 @@ Session 2 → can reuse cached User 1
 HQL -> Hibernate Query Language
 
 It is similar to SQL but works with entity names and fields instead of table names and columns.
+
+
+-------------------------------------------------------
+What is the difference between JPA and Hibernate?
+-------------------------------------------------------
+
+JPA is a Java specification that defines standard APIs and rules for ORM. Hibernate is one of the implementations of JPA.
+
+Annotations like @Entity, @Id, @OneToMany come from JPA, while Hibernate provides the underlying ORM implementation.
+
+
+
+-----------------------------------------------------------------
+mappedBy / owning-side concept
+-----------------------------------------------------------------
+
+the owning side is the entity that manages the foreign key
+
+In a Department-Employee relationship, Employee is usually the owning side because it contains department_id using @JoinColumn
+
+Department is the inverse side and uses mappedBy = "department" to indicate that the relationship is already
+managed by the department field in Employee.
+
+@Entity
+class Employee {
+
+@Id
+Long employeeId;
+
+String employeeName;
+
+@JoinColumn("department_id")
+@ManyToOne
+Department department;
+
+}
+
+
+@Entity
+class Department {
+
+@Id
+Integer departmentId;
+
+String departmentName;
+
+@OneToMany(mappedBy = "department", fetch = FetchType.LAZY)
+List<Employee> employees;
+
+}
+
+
+Now suppose we fetch all departments:
+
+List<Department> departments =
+        departmentRepository.findAll();
+
+Hibernate first executes
+SELECT * FROM department;
+
+that's 1 query
+
+Because employees is LAZY, Hibernate has not yet fetched the employees.
+
+
+for (Department department : departments) {
+
+    System.out.println(department.getName());
+
+    for (Employee employee : department.getEmployees()) {
+        System.out.println(employee.getName());
+    }
+}
+
+department.getEmployees() -> for each department if executes
+select from employee where department_id = ?
+
+so that's 1 + N
+1 -> to fetch all N departments
+N -> fetch the employees in each department
+
+That's the N+1 problem
+
+this happens because the Fetch type is Lazy
+
+We can solve this using JOIN FETCH
+
+public interface DepartmentRepository
+        extends JpaRepository<Department, Long> {
+
+    @Query("""
+        SELECT DISTINCT d
+        FROM Department d
+        LEFT JOIN FETCH d.employees
+    """)
+    List<Department> findAllWithEmployees();
+}
+
+then List<Department> departments =
+             departmentRepository.findAllWithEmployees();
+
+this will populate both employees and departments in both the classes
+
+
+select d
+from Department d
+join fetch d.employees
+
+this is equalent to
+
+SELECT ...
+FROM department d
+INNER JOIN employee e
+    ON d.id = e.department_id;
+
+join fetch performs an inner fetch join, while left join fetch performs a left outer fetch join.
+fetch tells Hibernate to initialize the associated entity or collection in the same query.
+
+
+---------------------------------------------------
+flush() vs commit()
+---------------------------------------------------
+
+flush() synchronizes the Hibernate Session with the database by executing pending insert, update, and delete statements,
+but it does not commit the transaction. The transaction is still active and can be rolled back.
+
+commit() completes the transaction and makes the changes permanent.
+Hibernate usually performs a flush automatically before commit.

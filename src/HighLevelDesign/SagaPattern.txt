@@ -1,0 +1,449 @@
+===============================================================================================================================
+SAGA Pattern
+===============================================================================================================================
+
+Saga Pattern manages distributed transactions across microservices.
+Instead of using one global transaction, each service performs a local transaction.
+If any step fails, compensating transactions are executed to undo the effects of previously completed steps.
+Saga can be implemented using choreography with events or orchestration with a central coordinator.
+
+Imagine an e-commerce order involving three services:
+
+Order Service
+     ↓
+Payment Service
+     ↓
+Inventory Service
+
+When a customer places an order, ideally we want:
+
+1. Create Order
+2. Deduct Payment
+3. Reserve Inventory
+
+In a monolith with one database, we could use one DB transaction:
+
+BEGIN
+
+createOrder()
+deductPayment()
+reserveInventory()
+
+COMMIT
+
+If anything fails we can roll back the entire transaction
+
+
+But in microservices:
+
+Order Service      → Order DB
+Payment Service    → Payment DB
+Inventory Service  → Inventory DB
+
+Each service owns its own database
+
+So we cannot revert any previous transaction in another service if anything fails since the databases are independent here
+
+That is the problem Saga solves.
+
+
+Saga example --->
+
+Suppose the transaction is:
+
+T1 → Create Order
+T2 → Deduct Payment
+T3 → Reserve Inventory
+
+for successful case :
+Customer -> Create Order -> Deduct Payment -> Reserve Inventory -> Order Confirmed
+
+
+Now imagine Inventory fails since the product is out of stock
+we simply cannot rollback since the order and payment service transactions were already committed in their databases
+
+so saga performs compensating transactions
+
+Reserve Inventory(Fails) -> Refund Payment ->  Cancel Order
+
+
+Saga doesn't technically "rollback" the previous transaction.
+Instead, it performs another business operation that reverses its effect.
+
+
+
+---------------------------------------------------------------
+There are two main ways to implement Saga
+---------------------------------------------------------------
+
+1. Choreography
+2. Orchestration
+
+------------------------------------------------
+1. Choreography Saga
+------------------------------------------------
+
+There is no central controller.
+
+Services react to events.
+
+Order Service
+     |
+     | publishes OrderCreated
+     v
+Payment Service
+     |
+     | deducts payment
+     |
+     | publishes PaymentCompleted
+     v
+Inventory Service
+     |
+     | reserves stock
+     |
+     | publishes InventoryReserved
+     v
+Order Service
+     |
+     v
+Order CONFIRMED
+
+
+Failure case:
+
+Inventory Service
+     |
+     | InventoryFailed
+     v
+Payment Service
+     |
+     | Refund Payment
+     |
+     | PaymentRefunded
+     v
+Order Service
+     |
+     v
+CANCELLED
+
+
+Each service knows: "If I receive this event, I should do this."
+
+Typical Technologies :
+
+Kafka
+RabbitMQ
+AWS SNS/SQS
+
+
+--------------------------------
+2. Orchestration Saga
+--------------------------------
+
+Here we introduce a Saga Orchestrator.
+
+               Saga Orchestrator
+               /       |       \
+              /        |        \
+             v         v         v
+          Order     Payment   Inventory
+          Service   Service   Service
+
+The orchestrator explicitly controls the workflow.
+
+Orchestrator
+    |
+    | Create Order
+    v
+Order Service
+    |
+    | success
+    v
+Orchestrator
+    |
+    | Deduct Payment
+    v
+Payment Service
+    |
+    | success
+    v
+Orchestrator
+    |
+    | Reserve Inventory
+    v
+Inventory Service
+
+
+If inventory fails:
+
+Inventory Service
+       |
+       | FAILED
+       v
+Orchestrator
+       |
+       | Refund Payment
+       v
+Payment Service
+       |
+       | Cancel Order
+       v
+Order Service
+
+
+The orchestrator knows the entire Saga state:
+
+ORDER_CREATED
+PAYMENT_COMPLETED
+INVENTORY_PENDING
+INVENTORY_FAILED
+PAYMENT_REFUNDED
+ORDER_CANCELLED
+
+
+
+| Choreography                  | Orchestration                 |
+| ----------------------------- | ----------------------------- |
+| Event-driven                  | Central coordinator(uses rest apis or kafka)|
+| No central controller         | Orchestrator controls flow    |
+| Services listen to events     | Services receive commands     |
+| Loose coupling                | Easier workflow visibility    |
+| Good for small/simple Saga    | Better for complex Saga       |
+| Can become difficult to trace | Easier to debug               |
+| Usually Kafka/RabbitMQ        | Workflow/orchestrator service |
+
+
+
+Saga Orchestration
+        |
+        +-- Custom Spring Boot orchestrator
+        |
+        +-- Temporal
+        |
+        +-- Camunda
+        |
+        +-- AWS Step Functions
+        |
+        +-- Orkes Conductor
+
+
+you don't need one of these products to implement Saga.
+You could simply create:
+
+Order Service
+Payment Service
+Inventory Service
+
+        +
+
+OrderSagaOrchestrator
+
+where OrderSagaOrchestrator is just another Spring Boot component/service:
+
+public void createOrder() {
+
+    orderService.createOrder();
+
+    try {
+        paymentService.makePayment();
+        inventoryService.reserve();
+    } catch (Exception e) {
+        paymentService.refund();
+        orderService.cancelOrder();
+    }
+}
+
+
+
+--------------------------------------------------------------------------
+What if the compensation events/transactions fail?
+--------------------------------------------------------------------------
+
+If a compensating transaction fails, we should persist the Saga state and retry the compensation using an idempotent operation,
+usually with exponential backoff. If retries are exhausted, the failed operation can be moved to a DLQ and the Saga
+marked for manual intervention.
+
+suppose
+Create Order ✅ -> Deduct Payment ✅ -> Reserve Inventory ❌
+
+Now Refund Payment ❌ also fails
+
+At this point, you cannot just forget the Saga. The system has to keep track of the incomplete compensation and recover.
+
+usually we handle using these ways
+
+1. Retry the compensation --->
+
+Many failures are temporary: service unavailable, timeout, database temporarily down etc
+
+So the orchestrator retries:
+
+Refund Payment
+   ↓ failed
+Retry after 1s
+   ↓ failed
+Retry after 5s
+   ↓
+SUCCESS
+
+Usually with exponential backoff.
+
+
+2. Make compensation idempotent  --->
+
+Imagine the refund API times out:
+The payment service actually refunded the money, but the response never reached the orchestrator.
+
+The orchestrator retries.
+
+Without idempotency: there will be duplicate payments
+
+So we use something like: refund(orderId, transactionId)
+
+and payment service checks
+
+if already refunded:
+    return success
+else:
+    refund
+
+so retries are safe
+
+
+3. Persist Saga state ->
+
+The orchestrator should remember where it is:
+
+Saga ID: 12345
+
+Order Created        ✅
+Payment Completed    ✅
+Inventory Failed     ❌
+Payment Refund       PENDING
+Order Cancellation   PENDING
+
+If the orchestrator itself crashes and restarts, it can continue from:
+Payment Refund = PENDING
+Instead of losing the transaction
+
+
+4. Use Dead Letter Queue / failure queue --->
+
+After retrying several times: the event/task may be sent to a: DLQ
+
+Kafka retry topic
+        ↓
+DLQ
+        ↓
+Operations / support investigates
+
+DLQ -> Dead Letter Queue
+
+It is a special queue where we send messages/events that could not be processed successfully even after multiple retries.
+
+Then the support/operations team can inspect it and decide what to do.
+
+
+5. Manual intervention for permanent failures --->
+
+Some problems cannot be solved automatically.
+
+In this case an operations/support team has to resolve it manually.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

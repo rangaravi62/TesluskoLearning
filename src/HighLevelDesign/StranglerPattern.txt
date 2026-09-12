@@ -1,0 +1,46 @@
+============================================================
+Strangler Pattern
+============================================================
+
+The Strangler Pattern is used to gradually migrate a monolithic application to microservices.
+
+The core idea is:
+
+Don’t rewrite the entire monolith at once.
+Move one feature at a time into new microservices, while the old monolith continues to run.
+
+
+Client
+  |
+  v
++----------------------+
+|      MONOLITH        |
+|----------------------|
+| User Management      |
+| Orders               |
+| Payments             |
+| Notifications        |
++----------------------+
+
+Suppose we first extract Notifications into a microservice.
+
+                    +-------------------+
+                    | Notification      |
+               ---> | Microservice      |
+              /     +-------------------+
+Client ---> Gateway
+              \
+               ---> Monolith
+                    | Users
+                    | Orders
+                    | Payments
+
+
+The Gateway / Proxy decides where the request should go.
+
+/api/users/*          → Monolith
+/api/orders/*         → Monolith
+/api/payments/*       → Monolith
+/api/notifications/*  → Notification Service
+
+

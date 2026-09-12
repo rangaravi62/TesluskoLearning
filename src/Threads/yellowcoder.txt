@@ -669,7 +669,134 @@ submit(Runnable task) / submit(Callable<T> task) ->
 
 
 
+---------------------------------------------------------------------------------------------------------------------------------
+What is the difference between the Runnable and Callable interfaces in Java?
+------------------------------------------------------------------------------------------------------------------------
+
+Runnable and Callable both represent tasks that can be executed by threads, but the main difference is that
+Callable can return a result and throw checked exceptions, while Runnable cannot.
+
+------------
+Runnable
+------------
+
+@FunctionalInterface
+public interface Runnable {
+    void run();
+}
+
+Runnable task = () -> {
+    System.out.println("Processing...");
+};
+
+new Thread(task).start();
+
+or
+
+executor.submit(task);
+
+
+-------------
+Callable
+-------------
+
+@FunctionalInterface
+public interface Callable<V> {
+    V call() throws Exception;
+}
+
+Callable<Integer> task = () -> {
+    return 10 + 20;
+};
+
+Future<Integer> future = executor.submit(task);
+
+Integer result = future.get();
+
+isDone() -> Checks whether the task has finished.
+cancel() -> Attempts to cancel the task.
+get(timeout) -> waits for only specified time
+
+-----------------------
+Runnable vs Callable
+-----------------------
+
+| Runnable                           | Callable                              |
+| ---------------------------------- | ------------------------------------- |
+| `run()`                            | `call()`                              |
+| Returns `void`                     | Returns `V`                           |
+| Cannot declare checked exception   | Can throw checked exception           |
+| `Runnable`                         | `Callable<V>`                         |
+| Can be passed directly to `Thread` | Cannot be passed directly to `Thread` |
+| Result not returned directly       | Result obtained using `Future`        |
 
 
 
+-----------------------------------------------------
+completableFuture
+-----------------------------------------------------
+Run a task without returning a value
+
+CompletableFuture<Void> future =
+        CompletableFuture.runAsync(() -> {
+            System.out.println("Running...");
+        });
+
+
+Run a task that returns a value -------------
+
+CompletableFuture<String> future =
+        CompletableFuture.supplyAsync(() -> {
+            return "Hello";
+        });
+
+Getting the result --------------------------
+
+String result = future.get();
+
+or
+
+String result = future.join();
+
+
+Supports chaining of multiple operations ----------------------
+
+CompletableFuture<String> future =
+    CompletableFuture.supplyAsync(() -> "java")
+                     .thenApply(String::toUpperCase);
+
+
+Runs another task after completion. -----------------------
+
+CompletableFuture.supplyAsync(() -> "Java")
+                 .thenRun(() -> System.out.println("Done"));
+
+
+------------------------------------------------------------------------------------------------------------------------
+
+A CountDownLatch is a synchronization aid that allows one or more threads to wait until a set of operations being
+performed by other threads completes.
+
+latch.countDown();
+latch.await();
+
+Fixed count
+One-time use
+
+
+
+CyclicBarrier is a synchronization aid that allows a group of threads to wait for each other at a common point (barrier)
+before continuing execution.
+
+barrier.await(); -> barrier point
+
+Reusable
+Fixed number of threads
+
+
+Phaser
+
+Reusable
+Can add/remove participants dynamically
+Supports multiple phases
 
