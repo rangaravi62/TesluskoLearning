@@ -583,3 +583,69 @@ Binary Semaphore
 
 A semaphore with 1 permit:
 Semaphore semaphore = new Semaphore(1);
+
+
+
+---------------------------------------------------------------------
+Difference Between ThreadLocal / InheritableThreadLocal
+---------------------------------------------------------------------
+
+ThreadLocal → value belongs only to the current thread.
+InheritableThreadLocal → value belongs to the current thread and is copied to a newly created child thread.
+
+For example, with normal ThreadLocal --->
+
+ThreadLocal<String> tenant = new ThreadLocal<>();
+
+tenant.set("ICICI");
+
+new Thread(() -> {
+    System.out.println(tenant.get());
+}).start();
+
+The child thread prints: null
+because the value is not inherited.
+
+
+With InheritableThreadLocal --->
+
+InheritableThreadLocal<String> tenant =
+        new InheritableThreadLocal<>();
+
+tenant.set("ICICI");
+
+new Thread(() -> {
+    System.out.println(tenant.get());
+}).start();
+
+
+the child thread prints: ICICI
+because the value is inherited when the child thread is created.
+
+| Feature                                   | `ThreadLocal`  | `InheritableThreadLocal`     |
+| ----------------------------------------- | -------------- | ---------------------------- |
+| Value isolated per thread                 | Yes            | Yes                          |
+| Child thread gets parent's value          | No             | Yes                          |
+| Value copied when child thread is created | No             | Yes                          |
+| Good for servlet request context          | Yes            | Sometimes                    |
+| Safe assumption with thread pools         | No propagation | Also no reliable propagation |
+
+
+
+---------------------------------------------------------------------------------------------
+ExecutorService
+---------------------------------------------------------------------------------------------
+
+Without ExecutorService, we usually create threads manually:
+Thread t1 = new Thread(() -> {
+    System.out.println("Task running");
+});
+
+t1.start();
+
+If you have 1000 tasks, creating 1000 threads is inefficient because thread creation
+is expensive and too many threads consume memory/CPU.
+
+"ExecutorService solves this by maintaining a pool of reusable worker threads"
+
+

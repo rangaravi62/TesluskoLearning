@@ -1,0 +1,354 @@
+-----------------------------------------
+The TCP/IP model has 4 layers:
+-----------------------------------------
+
+1. Application Layer
+This is where your application-level protocols work.
+Examples: HTTP / HTTPS, DNS, SMTP, FTP, SSH
+
+for example if access https://amazon.com
+the browser creates an HTTP Request GET /products
+
+Application layer defines how applications communicate.
+
+
+2. Transport Layer
+This layer decides how data should be transported between two applications.
+
+Main Protocols : TCP and UDP
+
+TCP provides: Reliable delivery, Ordered delivery, Error detection, Retransmission, Connection management
+
+The packets transfer will be in order, if a packet is lost , it retransmits again
+
+So Transport Layer answers:
+
+Which application/process should receive the data, and should delivery be reliable?
+
+
+3. Internet Layer
+
+This is mainly about: IP addresses, Routing
+
+Main protocol: IP
+
+suppose
+
+Your laptop:
+192.168.1.10
+
+Amazon server:
+54.x.x.x
+
+The Internet Layer creates IP packets containing something like:
+
+Source IP      → your IP
+Destination IP → Amazon IP
+
+Routers use this information to forward packets.
+
+
+4. Network Access Layer
+
+It handles how the data actually travels through the local network.
+
+
+
+
+
+
+IP Address → identifies the machine
+
+Port       → identifies the application/process
+
+TCP        → controls reliable communication
+
+
+--------------------------------------------------
+TCP 3-way handshake
+--------------------------------------------------
+
+Client                     Server
+
+SYN        ------------------>
+           travels using IP
+
+           <------------------ SYN-ACK
+           travels using IP
+
+ACK        ------------------>
+           travels using IP
+
+
+
+
+
+CLIENT                                                     SERVER
+Browser/App                                                Backend/API
+   |                                                           |
+   | 1. DNS: "What is api.example.com?"                        |
+   |---------------------------------------------------------->|
+   |       Gets server IP: 20.30.40.50                         |
+   |                                                           |
+   | 2. TCP 3-way handshake                                    |
+   |                                                           |
+   | ---- SYN ------------------------------------------------> |
+   | <--- SYN-ACK --------------------------------------------- |
+   | ---- ACK ------------------------------------------------> |
+   |                                                           |
+   |       TCP connection established                           |
+   |                                                           |
+   | 3. TLS handshake (because HTTPS)                           |
+   | <========================================================> |
+   |       Secure encrypted channel established                 |
+   |                                                           |
+   | 4. HTTP request                                            |
+   | ---- GET /users -----------------------------------------> |
+   |                                                           |
+   |                                      Application processes |
+   |                                      request               |
+   |                                                           |
+   | 5. HTTP response                                           |
+   | <--- 200 OK + data --------------------------------------- |
+   |                                                           |
+
+
+1. DNS lookup
+       ↓
+2. TCP 3-way handshake
+       ↓
+3. TLS handshake
+       ↓
+4. HTTP request
+       ↓
+5. Server processing
+       ↓
+6. HTTP response
+
+
+
+For each message
+first hand shake :
+
+TCP/IP layer (SYN) -> Internet Layer (Source + Destination IP) -> Network Layer (Ethernet / Wi-Fi frame)
+-> Physical network(Routers → Internet → Server)
+
+
+----------------------------
+TLS Handshake
+----------------------------
+
+The TLS handshake is the step where the client and server create a secure encrypted connection before sending HTTPS data.
+
+For Normal HTTPS over TCP
+
+DNS
+ ↓
+TCP 3-way handshake
+ ↓
+TLS handshake
+ ↓
+HTTP request/response
+
+
+At a high level, during the TLS handshake:
+
+Client                              Server
+
+   ---- Hello -------------------->
+   "These TLS versions and
+    encryption algorithms I support"
+
+   <--- Server Hello --------------
+        "We'll use this TLS version
+         and algorithm"
+
+   <--- Server Certificate --------
+        "Here is my certificate
+         proving who I am"
+
+Client verifies certificate
+   - Is it issued by a trusted CA?
+   - Is it valid?
+   - Does domain match?
+
+        ↓
+
+Client + Server securely agree
+on shared encryption keys
+
+        ↓
+
+Encrypted connection established
+
+
+
+| TCP                      | TLS                       |
+| ------------------------ | ------------------------- |
+| Reliable delivery        | Encryption                |
+| Ordered delivery         | Server authentication     |
+| Retransmits lost packets | Prevents tampering        |
+| Uses ports               | Protects transmitted data |
+
+
+| TCP                    | UDP                            |
+| ---------------------- | ------------------------------ |
+| Connection-oriented    | Connectionless                 |
+| 3-way handshake        | No handshake                   |
+| Reliable delivery      | No delivery guarantee          |
+| Maintains packet order | Order not guaranteed           |
+| Retransmits lost data  | No automatic retransmission    |
+| Has acknowledgements   | No acknowledgements by default |
+| More overhead          | Less overhead                  |
+| Usually higher latency | Usually lower latency          |
+
+
+---------------------------------------------------------------------------
+client - server model
+---------------------------------------------------------------------------
+
+           Server
+        /    |    \
+       /     |     \
+ Client A Client B Client C
+
+Client  ───── request ─────>  Server
+Client  <──── response ─────  Server
+
+Clients request something, and the server responds.
+
+
+1) HTTP / HTTPS --->
+
+most common client-server model
+
+it is simply
+
+1. TCP connection established
+        ↓
+2. TLS handshake happens over that TCP connection
+        ↓
+3. HTTP request/response is sent through the TLS connection
+
+
+2) WebSocket --->
+
+WebSocket is also client-server, but it is a bidirectional connection
+
+Client → Server
+Server → Client
+
+Both can send data whenever needed.
+
+Ex: WhatsApp-like chat.
+User A
+   |
+   | message
+   ↓
+Chat Server
+   |
+   | instantly push
+   ↓
+User B
+
+
+
+3) SSE — Server-Sent Events --->
+
+SSE is useful when the server needs to continuously push information to the client.
+
+Client ---- HTTP request ----> Server
+
+Client <---- update 1 -------- Server
+Client <---- update 2 -------- Server
+Client <---- update 3 -------- Server
+
+Server → Client
+
+It is mainly for oneway streaming
+
+Ex: Notifications, Live Scores
+
+
+
+4) gRPC
+
+Commonly used for server to server communication / microservice communication.
+
+Ex:
+Order Service
+      ↓
+Payment Service
+
+
+
+5) FTP / SFTP(secure) -> File transfer protocol
+
+Used when the client-server interaction is specifically for files.
+
+Client
+   |
+   | upload/download
+   ↓
+File Server
+
+
+
+6) SMTP
+
+SMTP is a client-server protocol used to send email.
+
+Backend
+   |
+   | "Send OTP email"
+   ↓
+SMTP Server
+   |
+   ↓
+User's mailbox
+
+
+
+7) SSH
+
+It is a client - server model
+
+Your Laptop
+    |
+    | SSH
+    ↓
+Linux Server
+
+It gives an encrypted remote shell.
+
+
+
+
+----------------------------------------
+peer-to-peer (P2P) model
+----------------------------------------
+
+Each node, called a peer, can act as both:
+
+Peer A  ↔  Peer B
+  ↕         ↕
+Peer C  ↔  Peer D
+
+
+1) WebRTC
+
+Very important for real-time P2P communication.
+Uses UDP
+
+Used For:
+
+Video calls
+Voice calls
+Screen sharing
+Direct data transfer
+Live Streaming
+
+
+
+
+

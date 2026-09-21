@@ -1,0 +1,256 @@
+------------------------------------------------------------------------------
+My Notes
+------------------------------------------------------------------------------
+
+----------------
+Spring + JDBC
+----------------
+
+In Repository class we need to use
+
+@Autowired
+private DataSource dataSource;  // hikari cp will inject the object here
+
+this datasource we can use to create connections and do the db operations
+Connection con = dataSource.getConnection();
+
+Application.properties configuration
+
+spring.datasource.url=jdbc:mysql:///tomcatUpCC
+spring.datasource.username=tomcatUpCC
+spring.datasource.password=c_xps123
+
+---------------------
+SpringDataJdbc
+---------------------
+
+@Autowired
+private JdbcTemplate template;
+
+We'll be using JdbcTemplate class to perform db operations
+
+Spring provides h2 in memory database, we can use this until the application is running
+
+Spring Boot automatically looks for and executes SQL scripts named schema.sql (and data.sql)
+in the src/main/resources/ directory during application startup.
+
+properties file configuration
+
+#http://localhost:8485/h2-console -> h2 console available in this url
+server.port=8485
+
+spring.datasource.url=jdbc:h2:mem:tomcatUpCC
+spring.h2.console.enabled=true
+
+
+----------------------------
+SpringDataJpa
+---------------------------
+
+public interface IAlienRepo extends CrudRepository<Alien,Integer> {
+}
+
+spring will provide the implementation, this will be having the methods to interact with the db
+
+Configuration
+
+spring.datasource.url=jdbc:mysql://localhost:3306/tomcatUpCC
+spring.datasource.username=tomcatUpCC
+spring.datasource.password=c_xps123
+spring.data.hibernate.ddl-auto=create
+spring.jpa.show-sql=true
+#  shows all the sql queries
+
+CrudRepository Methods --->
+
+public interface CrudRepository<T, ID> extends Repository<T, ID> {
+
+    <S extends T> S save(S entity);
+
+    <S extends T> Iterable<S> saveAll(Iterable<S> entities);
+
+    Optional<T> findById(ID id);
+
+    boolean existsById(ID id);
+
+    Iterable<T> findAll();
+
+    Iterable<T> findAllById(Iterable<ID> ids);
+
+    long count();
+
+    void deleteById(ID id);
+
+    void delete(T entity);
+
+    void deleteAllById(Iterable<? extends ID> ids);
+
+    void deleteAll(Iterable<? extends T> entities);
+
+    void deleteAll();
+}
+
+PagingAndSortingRepository ---->
+
+Mainly gives pagination and sorting
+
+Iterable<T> findAll(Sort sort);
+
+Page<T> findAll(Pageable pageable);
+
+Sort sort = Sort.by(isAsc ? Sort.Direction.ASC : Sort.Direction.DESC, properties );// can pass N number of properties
+
+Pageable pageable = PageRequest.of(pageNo,pageSize,sort);
+
+
+
+-------------------------------
+CRUD VS JPA REPOSITORY
+-------------------------------
+
+CrudRepository
+    ↓
+Basic CRUD
+save
+find
+delete
+count
+exists
+
+
+JpaRepository (JpaRepository extends both the CRUD and paging/sorting repository families.)
+    ↓
+Everything above
++
+Sorting
+Pagination
+flush()
+saveAndFlush()
+saveAllAndFlush()
+getReferenceById()
+deleteAllInBatch()
+deleteAllByIdInBatch()
+Query By Example
+
+
+imp methods of JPA Repository
+
+findAll(Sort sort)
+findAll(Pageable pageable)
+
+flush()
+saveAndFlush()
+saveAllAndFlush()
+
+getReferenceById()
+
+deleteAllInBatch()
+deleteAllByIdInBatch()
+
+
+--------------------------------
+Custom Finder Methods
+--------------------------------
+
+If we want to use our custom fetch queries other than in built methods present in the Repository class then we
+need to use Custom Finder Methods
+
+Normal in built method -> Vaccine getById()
+
+using custom finder method -> findByPropertyKeywordPropertyKeyword.................
+
+List<Vaccine> findByVaccineCostLessThan(Double vaccineCost)
+
+Static Projection ---> we'll be able to get only the specified fields which we had mentioned in the custom interfaces
+
+@Service
+public interface ResultView {
+    public String getVaccineName();
+    public String getVaccineCompany();
+}
+
+List<ResultView> findByVaccineCostLessThan(Double vaccineCost); // custom finder methods -> findBy - fieldname - keyword
+
+
+Dynamic Projection --->
+
+public interface View { // by extending this view in other ResultView we can achieve dynamic projection
+}
+
+public interface ResultView1 extends View {
+    public String getVaccineName();
+    public String getVaccineCompany();
+}
+
+public <T extends View>List<T> findByVaccineCostGreaterThan(Double vaccineCost, Class<T> tClass);
+
+
+deleteAllById -> In CRUDRepository -> uses a seperate delete sql query for each id
+deleteAllByIdInBatch -> In JPARepository -> uses a single sql query to delete all the ids
+
+-----------------------
+Custom Queries
+-----------------------
+
+We can use JPQL to write custom queries
+JPQL doesn't support INSERT, it supports only SELECT, UPDATE and DELETE, so we need to use native query for INSERT
+
+
+public interface IVaccineRepo extends JpaRepository<Vaccine,Integer> {
+
+    @Query("FROM Vaccine WHERE vaccineCompany = :vaccineCompany")
+    public List<Vaccine> searchByVaccineCompany(String vaccineCompany);
+
+    @Query("FROM Vaccine WHERE vaccineName= :vc")
+    public List<Vaccine> searchByVaccineName(@Param("vc") String vaccineName); // @Param because we are using the name different from the input parameter name (vaccineName)
+
+
+    @Transactional
+    @Modifying
+    @Query("UPDATE Vaccine SET vaccineCost = :newPrice WHERE vaccineName = :vaccineName")
+    public int updateVaccineInfo(Double newPrice, String vaccineName);
+
+    @Transactional
+    @Modifying
+    @Query("DELETE Vaccine WHERE vaccineCost BETWEEN :minRange AND :maxRange")
+    public int deleteVaccineBetween(Double minRange, Double maxRange);
+
+
+    // JPQL doesn't support INSERT, it supports only SELECT, UPDATE and DELETE, so we need to use native query for INSERT
+    @Transactional
+    @Modifying
+    @Query (value = "INSERT INTO VACCINE (vaccine_name, vaccine_company, vaccine_cost) values (:name, :company , :cost)", nativeQuery = true)
+    public int insertVaccine(@Param("name") String name, @Param("company") String company, @Param("cost") Double cost);
+}
+
+
+
+
+------------------------------------------------------------------------------------------------------------------------------
+
+------------------------------
+What is JPA?-
+------------------------------
+
+JPA stands for Java Persistence API.
+
+It is a specification that defines rules/annotations for ORM, like:
+@Entity
+@Id
+@OneToMany
+@ManyToOne
+@Table
+@Column
+
+Hibernate is an implementation of JPA that performs the actual ORM operations
+
+Spring Data JPA is built on top of JPA and provides repository abstractions to reduce boilerplate database code.
+
+
+| Annotation        | Meaning                    |
+| ----------------- | -------------------------- |
+| `@Entity`         | Marks class as JPA entity  |
+| `@Table`          | Maps class to table name   |
+| `@Id`             | Primary key                |
+| `@GeneratedValue` | Auto-generates primary key |
+| `@Column`         | Maps field to column       |

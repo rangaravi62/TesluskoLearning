@@ -1,0 +1,179 @@
+--------------------------------------------------
+CompletableFuture
+--------------------------------------------------
+
+CompletableFuture is used to perform asynchronous, non-blocking operations and then chain dependent tasks.
+
+Without it:
+
+String result = callService(); // current thread waits here
+process(result);
+
+callService should process to proceed ahead
+
+With CompletableFuture:
+
+CompletableFuture<String> future =
+        CompletableFuture.supplyAsync(() -> callService());
+
+future.thenAccept(result -> process(result));
+
+The caller can continue doing other work while callService() executes on another thread.
+
+
+-------------------------------------------------------------------
+runAsync vs supplyAsync
+-------------------------------------------------------------------
+
+| Method          | Takes         | Returns                   |
+| --------------- | ------------- | ------------------------- |
+| `runAsync()`    | `Runnable`    | `CompletableFuture<Void>` |
+| `supplyAsync()` | `Supplier<T>` | `CompletableFuture<T>`    |
+
+
+CompletableFuture<Void> future =
+        CompletableFuture.runAsync(() -> {
+            System.out.println("Sending email");
+        });
+
+CompletableFuture<String> future =
+        CompletableFuture.supplyAsync(() -> {
+            return "Payment successful";
+        });
+
+
+
+| Feature                | `ExecutorService.submit()` | `runAsync()`              | `supplyAsync()`        |
+| ---------------------- | -------------------------- | ------------------------- | ---------------------- |
+| Async execution        | Yes                        | Yes                       | Yes                    |
+| Input type             | `Runnable` / `Callable`    | `Runnable`                | `Supplier<T>`          |
+| Result                 | `Future<T>`                | `CompletableFuture<Void>` | `CompletableFuture<T>` |
+| Easy chaining          | No                         | Yes                       | Yes                    |
+| Combine multiple tasks | Difficult                  | Yes                       | Yes                    |
+| Exception pipelines    | Limited                    | Yes                       | Yes                    |
+| Default executor       | You provide it             | Common ForkJoinPool       | Common ForkJoinPool    |
+
+ExecutorService is used to manage thread pools and execute tasks.
+CompletableFuture is used to build asynchronous, non-blocking pipelines with chaining, combining, and exception handling.
+runAsync() is for tasks without a return value,
+while supplyAsync() is for tasks that return a value.
+
+
+---------------------------------------------------------
+thenApply(), thenAccept(), thenRun()
+---------------------------------------------------------
+
+thenApply() -> Used when you want to transform the result.
+
+CompletableFuture<String> future =
+        CompletableFuture
+                .supplyAsync(() -> "ranga")
+                .thenApply(name -> name.toUpperCase());
+
+System.out.println(future.join());
+
+
+thenAccept() -> Used when you need the result but don't need to return another result.
+
+CompletableFuture
+        .supplyAsync(() -> "Ranga")
+        .thenAccept(name -> System.out.println(name));
+
+
+thenApply  → Function<T,R>
+thenAccept → Consumer<T>
+
+
+thenRun() -> Runs something afterward but doesn't use the previous result.
+
+CompletableFuture
+        .supplyAsync(() -> "Order created")
+        .thenRun(() -> System.out.println("Workflow finished"));
+
+
+Ex :
+
+CompletableFuture
+        .supplyAsync(() -> getUser())
+        .thenApply(user -> getOrders(user))
+        .thenApply(orders -> calculateTotal(orders))
+        .thenAccept(total -> System.out.println(total));
+
+
+
+---------------------------------------------------------
+thenCompose()
+---------------------------------------------------------
+
+thenCompose() flattens the nested future
+Use thenCompose() when your function returns another CompletableFuture
+
+suppose
+CompletableFuture<User> getUser()
+
+CompletableFuture<List<Order>> getOrders(User user)
+
+CompletableFuture<CompletableFuture<List<Order>>> future =
+        getUser()
+            .thenApply(user -> getOrders(user));
+
+we have CompletableFuture<CompletableFuture<List<Order>>> now
+
+Nested Future
+
+CompletableFuture<List<Order>> future = getUser().thenCompose(user -> getOrders(user));
+
+flattens the nested future.
+
+map()     → thenApply()
+flatMap() → thenCompose()
+
+
+------------------------------------------
+thenCombine()
+------------------------------------------
+
+Used when you have two independent CompletableFutures and want to combine their results.
+
+CompletableFuture<String> userFuture =
+        CompletableFuture.supplyAsync(() -> "Ranga");
+
+CompletableFuture<Integer> balanceFuture =
+        CompletableFuture.supplyAsync(() -> 5000);
+
+
+CompletableFuture<String> result =
+        userFuture.thenCombine(
+                balanceFuture,
+                (name, balance) ->
+                        name + " has balance " + balance
+        );
+
+System.out.println(result.join());
+
+getUser() --------\
+                   \
+                    → combine → result
+                   /
+getBalance() -----/
+
+Both tasks can run in parallel
+
+------------------------------------------
+allOf()
+------------------------------------------
+
+Used when you want to wait for multiple CompletableFutures to complete.
+
+CompletableFuture<Void> all =
+        CompletableFuture.allOf(f1, f2, f3);
+
+all.join();
+
+System.out.println(f1.join());
+System.out.println(f2.join());
+System.out.println(f3.join());
+
+CompletableFuture.allOf() returns CompletableFuture<Void>, so it waits for completion but doesn't collect the individual results.
+We access the original futures afterward to retrieve their values.
+

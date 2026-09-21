@@ -1,0 +1,423 @@
+@RestController
+-----------------------
+
+@RestController
+public class UserController {
+
+    @GetMapping("/hello")
+    public String hello() {
+        return "Hello Ravi";
+    }
+}
+
+@RestController = @Controller + @ResponseBody
+So whatever we return from the method is written directly to the HTTP response body.
+
+
+----------------------------
+@RequestMapping
+----------------------------
+
+Used to define the base url path
+
+@RestController
+@RequestMapping("/api/users")
+public class UserController {
+}
+
+Now all APIs inside this controller will start with:
+
+/api/users
+
+-------------------------------------
+HTTP method annotations
+-------------------------------------
+
+| Annotation       | HTTP Method | Use                  |
+| ---------------- | ----------- | -------------------- |
+| `@GetMapping`    | GET         | Fetch data           |
+| `@PostMapping`   | POST        | Create data          |
+| `@PutMapping`    | PUT         | Update full resource |
+| `@PatchMapping`  | PATCH       | Partial update       |
+| `@DeleteMapping` | DELETE      | Delete data          |
+
+
+@RestController
+@RequestMapping("/api/users")
+public class UserController {
+
+    @GetMapping("/{id}")
+    public String getUser(@PathVariable Long id) {
+        return "Get user " + id;
+    }
+
+    @PostMapping
+    public String createUser(@RequestBody UserRequest request) {
+        return "User created: " + request.getName();
+    }
+
+    @PutMapping("/{id}")
+    public String updateUser(@PathVariable Long id,
+                             @RequestBody UserRequest request) {
+        return "User updated: " + id;
+    }
+
+    @DeleteMapping("/{id}")
+    public String deleteUser(@PathVariable Long id) {
+        return "User deleted: " + id;
+    }
+}
+
+
+------------------
+@PathVariable
+------------------
+
+Used to read values from URL path
+
+@GetMapping("/{id}")
+public String getUser(@PathVariable Long id) {
+    return "User id: " + id;
+}
+GET /api/users/101
+
+Use @PathVariable when the value identifies a specific resource.
+
+--------------------
+@RequestParam
+--------------------
+
+Used to read query parameters
+
+@GetMapping
+public String searchUsers(@RequestParam String status) {
+    return "Status: " + status;
+}
+
+GET /api/users?status=ACTIVE
+
+Use @RequestParam for filtering, sorting, pagination, searching.
+
+
+--------------------
+@RequestBody
+--------------------
+@RequestBody is used to read JSON request body and convert it into a Java object.
+
+@PostMapping
+public String createUser(@RequestBody UserRequest request) {
+    return "User created: " + request.getName();
+}
+
+Spring uses Jackson internally to convert JSON into Java object.
+
+--------------------------
+ResponseEntity
+--------------------------
+
+Used when we want control over Http body, headers , Http status code
+
+ex :
+
+ResponseEntity.ok(response);
+this returns HTTP status: 200 OK
+
+ResponseEntity.status(HttpStatus.CREATED).body(response);
+HTTP status: 201 Created
+
+
+-------------------------------------------------
+@PathVariable vs @RequestParam
+-------------------------------------------------
+
+| Point      | `@PathVariable`         | `@RequestParam`               |
+| ---------- | ----------------------- | ----------------------------- |
+| Reads from | URL path                | Query parameter               |
+| Used for   | Resource identifier     | Filtering/searching/sorting   |
+| Example    | `/users/101`            | `/users?status=ACTIVE`        |
+| Code       | `@PathVariable Long id` | `@RequestParam String status` |
+
+
+`@PathVariable` is used to read values from the URI path, usually to identify a specific resource,
+like `/users/101`. `@RequestParam` is used to read query parameters from the URL,
+usually for filtering, searching, sorting, or pagination, like `/users?status=ACTIVE`.
+
+
+
+-----------------------------
+DTOs in Spring Boot
+-----------------------------
+
+DTO means Data Transfer Object
+
+used to transfer the data between different layers or between server and client
+DTO is a separate class used for request and response data instead of directly exposing the database entity.
+
+Why not directly use Entity in Controller?
+
+suppose if we have the user class
+
+@Entity
+public class User {
+
+    @Id
+    private Long id;
+
+    private String name;
+
+    private String email;
+
+    private String password;
+
+    private String role;
+
+    private LocalDateTime createdAt;
+}
+
+Response may expose sensitive fields
+
+Instead create a response DTO
+public class UserResponseDTO {
+
+    private Long id;
+    private String name;
+    private String email;
+}
+
+Request DTO -> Used for incoming data from client.
+Response DTO -> Used for outgoing data to client.
+
+
+Entity:
+
+@Entity
+public class User {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String name;
+    private String email;
+    private String password;
+}
+
+Request DTO:
+
+public class CreateUserRequest {
+
+    private String name;
+    private String email;
+    private String password;
+}
+
+Response DTO:
+
+public class UserResponse {
+
+    private Long id;
+    private String name;
+    private String email;
+}
+
+
+------------------------------------------
+DTO with Validation
+------------------------------------------
+
+public class CreateUserRequest {
+
+    @NotBlank(message = "Name is required")
+    private String name;
+
+    @Email(message = "Invalid email format")
+    private String email;
+
+    @NotBlank(message = "Password is required")
+    private String password;
+}
+
+@PostMapping
+public ResponseEntity<UserResponse> createUser(
+        @Valid @RequestBody CreateUserRequest request) {
+
+    UserResponse response = userService.createUser(request);
+    return ResponseEntity.status(HttpStatus.CREATED).body(response);
+}
+
+
+
+----------------------------------------------------------------------
+Request Validation in Spring Boot
+----------------------------------------------------------------------
+
+dependency : spring-boot-starter-validation
+
+This provides Jakarta Bean Validation support.
+
+
+| Annotation  | Meaning                                          |
+| ----------- | ------------------------------------------------ |
+| `@NotNull`  | Value should not be null                         |
+| `@NotBlank` | String should not be null, empty, or only spaces |
+| `@NotEmpty` | Collection/String should not be null or empty    |
+| `@Email`    | Valid email format                               |
+| `@Size`     | Min/max length                                   |
+| `@Min`      | Minimum numeric value                            |
+| `@Max`      | Maximum numeric value                            |
+| `@Pattern`  | Regex validation                                 |
+| `@Positive` | Must be positive                                 |
+| `@Past`     | Date must be in past                             |
+| `@Future`   | Date must be in future                           |
+
+
+Use @Valid in controller
+
+Ex :
+
+@PostMapping
+public ResponseEntity<UserResponse> createUser(
+        @Valid @RequestBody CreateUserRequest request) {
+
+    UserResponse response = userService.createUser(request);
+    return ResponseEntity.status(HttpStatus.CREATED).body(response);
+}
+
+Validation works only when we add @Valid before @RequestBody.
+Without @Valid, annotations in DTO will not be triggered automatically.
+
+
+--------------------------------------------------------
+What happens when validation fails?
+--------------------------------------------------------
+
+If request is invalid:
+
+Spring throws:
+
+MethodArgumentNotValidException
+By default, Spring Boot returns an error response.
+But in real projects, we usually customize it using @RestControllerAdvice.
+
+Global validation error handling
+
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, String>> handleValidationErrors(
+            MethodArgumentNotValidException ex) {
+
+        Map<String, String> errors = new HashMap<>();
+
+        ex.getBindingResult().getFieldErrors().forEach(error -> {
+            errors.put(error.getField(), error.getDefaultMessage());
+        });
+
+        return ResponseEntity.badRequest().body(errors);
+    }
+}
+
+-----------------------------------------
+@NotNull vs @NotEmpty vs @NotBlank
+-----------------------------------------
+
+| Annotation  | Allows null? | Allows empty? | Allows only spaces? |
+| ----------- | -----------: | ------------: | ------------------: |
+| `@NotNull`  |         ❌ No |         ✅ Yes |               ✅ Yes |
+| `@NotEmpty` |         ❌ No |          ❌ No |               ✅ Yes |
+| `@NotBlank` |         ❌ No |          ❌ No |                ❌ No |
+
+
+
+---------------------------------------------
+Exception Handling in Spring Boot
+---------------------------------------------
+
+Basic custom exception
+
+public class UserNotFoundException extends RuntimeException {
+
+    public UserNotFoundException(String message) {
+        super(message);
+    }
+}
+
+
+We can use it inside a controller
+
+@ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<String> handleUserNotFound(UserNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    }
+
+    but this will be limited to this method inside a controller
+
+
+Global exception handling using @RestControllerAdvice
+
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleUserNotFound(
+            UserNotFoundException ex,
+            HttpServletRequest request) {
+
+        ApiErrorResponse error = new ApiErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.NOT_FOUND.value(),
+                "NOT_FOUND",
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+}
+
+
+----------------------------------------------------
+@ControllerAdvice vs @RestControllerAdvice
+----------------------------------------------------
+
+| Annotation              | Meaning                                       |
+| ----------------------- | --------------------------------------------- |
+| `@ControllerAdvice`     | Global exception handling for MVC controllers |
+| `@RestControllerAdvice` | `@ControllerAdvice` + `@ResponseBody`         |
+
+
+
+-------------------------------
+@Valid vs @Validation
+-------------------------------
+
+@Valid -> used to validate request body DTO, commonly used with @RequestBody
+@Validated -> used for method-level validation, such as validating @PathVariable and @RequestParam
+
+We can use @Valid and @Validated with @RequestBody
+
+For nested DTO objects, use @Valid.
+
+public class CreateOrderRequest {
+
+    @NotBlank
+    private String orderName;
+
+    @Valid
+    @NotNull
+    private AddressRequest address;
+}
+
+
+@Validated
+@RestController
+@RequestMapping("/api/users")
+public class UserController {
+    @GetMapping("/{id}")
+    public ResponseEntity<UserResponse> getUser(
+            @PathVariable @Positive Long id) {
+        return ResponseEntity.ok(userService.getUser(id));
+    }
+}
+

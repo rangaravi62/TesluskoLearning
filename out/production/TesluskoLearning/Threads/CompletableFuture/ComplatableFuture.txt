@@ -1,0 +1,23 @@
+--------------------------------------------------
+CompletableFuture
+--------------------------------------------------
+
+CompletableFuture is used to perform asynchronous, non-blocking operations and then chain dependent tasks.
+
+Without it:
+
+String result = callService(); // current thread waits here
+process(result);
+
+callService should process to proceed ahead
+
+With CompletableFuture:
+
+CompletableFuture<String> future =
+        CompletableFuture.supplyAsync(() -> callService());
+
+future.thenAccept(result -> process(result));
+
+The caller can continue doing other work while callService() executes on another thread.
+
+

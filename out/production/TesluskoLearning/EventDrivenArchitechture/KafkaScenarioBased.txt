@@ -1,0 +1,214 @@
+-------------------------------------------------------------------------------------------------
+1. Topic has 3 partitions and consumer group has 5 consumers. What happens?
+-------------------------------------------------------------------------------------------------
+Only 3 consumers will actively consume, The remaining 2 consumers for the consumer group will stay idle because one partition
+can be assigned to only one consumer of the same group.
+
+-------------------------------------------------------------------------------------------------
+2. Consumer processes a message successfully but crashes before committing the offset. What happens?
+-------------------------------------------------------------------------------------------------
+Kafka will deliver the message again from the last committed offset.
+This can cause duplicate processing, so the consumer should be made idempotent.
+
+-------------------------------------------------------------------------------------------------
+3. Consumer commits the offset first and then crashes before processing the message. What happens?
+-------------------------------------------------------------------------------------------------
+The message may effectively be lost because Kafka thinks it was already consumed.
+This is why committing after successful processing is generally preferred.
+
+-------------------------------------------------------------------------------------------------
+4. Producer sends a message, Kafka stores it, but the ACK is lost. What happens?
+-------------------------------------------------------------------------------------------------
+The producer may retry because it doesn't know the message was stored.
+Without idempotent producer, this can create duplicate records.
+
+-------------------------------------------------------------------------------------------------
+5. How do you prevent producer retry duplicates?
+-------------------------------------------------------------------------------------------------
+enable.idempotence=true
+Enable Kafka's idempotent producer. Kafka tracks producer IDs and sequence numbers
+so retrying the same message doesn't append another copy.
+
+
+-------------------------------------------------------------------------------------------------
+6. The broker hosting a partition leader crashes. What happens?
+-------------------------------------------------------------------------------------------------
+Kafka elects an eligible in-sync replica as the new leader. Producers and consumers then continue through the new leader.
+
+-------------------------------------------------------------------------------------------------
+7. Replication factor is 3, min.insync.replicas=2, acks=all, but only one replica is available. Can the producer write?
+-------------------------------------------------------------------------------------------------
+No. Kafka rejects the write because there aren't enough in-sync replicas.
+This sacrifices availability to protect durability.
+
+-------------------------------------------------------------------------------------------------
+8. Consumer lag keeps increasing. What could be wrong?
+-------------------------------------------------------------------------------------------------
+Producers are generating events faster than consumers can process them.
+Causes could include slow DB/API calls, expensive processing, too few consumers, consumer failures, or insufficient partitions.
+
+-------------------------------------------------------------------------------------------------
+9. How would you reduce consumer lag?
+-------------------------------------------------------------------------------------------------
+First optimize the consumer processing. Then scale consumer instances if there are enough partitions.
+If all partitions already have consumers, increasing consumers further won't help; you may need more partitions.
+
+-------------------------------------------------------------------------------------------------
+10. One consumer in a group crashes. What happens?
+-------------------------------------------------------------------------------------------------
+Kafka detects that it is no longer active and triggers a rebalance.
+Its partitions are assigned to the remaining consumers, which resume from the last committed offsets.
+
+-------------------------------------------------------------------------------------------------
+11. One particular Kafka message always fails processing. What would you do?
+-------------------------------------------------------------------------------------------------
+Retry it a limited number of times. If it still fails, send it to a DLQ/retry topic instead of
+retrying forever and potentially blocking other records.
+
+-------------------------------------------------------------------------------------------------
+12. How do you maintain ordering for all events belonging to the same order?
+-------------------------------------------------------------------------------------------------
+Use orderId as the Kafka message key. Kafka sends messages with the same key to the same partition,
+and ordering is guaranteed within that partition for all of that order id events.
+
+Ex :
+
+ORD101 → ORDER_CREATED
+ORD101 → PAYMENT_COMPLETED
+ORD101 → ORDER_SHIPPED
+
+key = ORD101
+
+Partition 1
+
+ORDER_CREATED
+PAYMENT_COMPLETED
+ORDER_SHIPPED
+
+-------------------------------------------------------------------------------------------------
+13. Can Kafka guarantee ordering across the entire topic?
+-------------------------------------------------------------------------------------------------
+Not when the topic has multiple partitions. Kafka guarantees ordering only within a partition.
+
+-------------------------------------------------------------------------------------------------
+14. You have 6 partitions and 3 consumers. You want to double throughput. What can you do?
+-------------------------------------------------------------------------------------------------
+Increase consumers from 3 to 6. Each consumer can then handle one partition.
+Going beyond 6 consumers won't improve parallelism unless partitions are also increased.
+
+No of partitions = max parallelism
+
+-------------------------------------------------------------------------------------------------
+15. Inventory Service and Notification Service both need every OrderCreated event. Should they use the same consumer group?
+-------------------------------------------------------------------------------------------------
+No. They should use different groups:
+inventory-group
+notification-group
+
+Then both independently receive every order event. If they use the same group, they would share the events instead.
+
+-------------------------------------------------------------------------------------------------
+16. How would you prevent duplicate inventory deduction?
+-------------------------------------------------------------------------------------------------
+By making the Inventory Consumer Idempotent.
+
+Ex :
+eventId = EVT101
+orderId = ORD500
+
+Checks if the eventId is present in the db , if yes it'll not process else it adds the eventId into db and process the msg.
+
+-------------------------------------------------------------------------------------------------
+17. At-least-once or at-most-once—which would you choose for order/payment events?
+-------------------------------------------------------------------------------------------------
+Usually at-least-once + idempotent processing.
+Losing an order/payment event is generally worse than receiving a duplicate that can be safely detected.
+
+-------------------------------------------------------------------------------------------------
+18. Kafka has the message. Does consuming it delete the message?
+-------------------------------------------------------------------------------------------------
+No. Kafka retains records according to its retention policy. Consumer groups only maintain their own offsets.
+It can be configured :
+7 days, 30 days or based on the size
+
+-------------------------------------------------------------------------------------------------
+19. A new consumer joins an existing consumer group. What happens?
+-------------------------------------------------------------------------------------------------
+Kafka performs a rebalance and redistributes partitions among the consumers.
+If no of consumers > partitions then the remaining consumers will stay idle.
+
+-------------------------------------------------------------------------------------------------
+20. Your order topic has 3 partitions. Can you scale to 10 consumers for higher throughput?
+-------------------------------------------------------------------------------------------------
+You can deploy 10, but only 3 can actively consume. For useful parallelism of 10 consumers, you'd need at least 10 partitions.
+
+
+-------------------------------------------------------------------------------------------------
+21. Your consumer is processing messages very slowly. Because of that, Kafka thinks the consumer is
+    unresponsive and repeatedly triggers rebalances.
+    What Kafka setting is commonly involved here, and what would you check or change?
+-------------------------------------------------------------------------------------------------
+
+max.poll.interval.ms
+It defines the maximum time allowed between consumer poll() calls.
+
+Suppose your consumer polls some records and then takes too long to process them:
+
+poll()
+  ↓
+process records
+  ↓
+takes 8 minutes
+  ↓
+max.poll.interval.ms = 5 minutes
+
+Kafka considers that consumer unhealthy and removes it from the group.
+
+Consumer removed
+      ↓
+Rebalance
+      ↓
+Partitions assigned to another consumer
+
+If this keeps happening, you get repeated rebalances.
+
+
+What I'd check:
+
+1. Why is processing slow?
+   - DB call?
+   - external API?
+   - heavy computation?
+
+2. Reduce number of records per poll
+   → max.poll.records
+
+3. Optimize processing
+
+4. If processing legitimately takes longer,
+   increase max.poll.interval.ms
+
+
+
+If processing takes longer than max.poll.interval.ms, Kafka can consider the consumer unhealthy and trigger a rebalance.
+I would first investigate why processing is slow, possibly reduce max.poll.records, optimize the processing,
+or increase max.poll.interval.ms if long processing is expected.
+
+-------------------------------------------------------------------------------------------------
+22. Consumers heartbeats to kafka
+-------------------------------------------------------------------------------------------------
+
+Consumers in a consumer group send heartbeats to Kafka so the broker knows they are still alive and part of the group.
+
+If Kafka stops receiving heartbeats for longer than session.timeout.ms
+
+Then kafka considers that consumer is dead/unavailable
+
+heartbeat.interval.ms
+→ how frequently heartbeats are sent
+
+session.timeout.ms
+→ how long Kafka waits before declaring consumer dead
+
+max.poll.interval.ms
+→ how long the consumer is allowed to go without calling poll() again

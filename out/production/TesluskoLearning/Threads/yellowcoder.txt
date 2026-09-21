@@ -476,6 +476,8 @@ run() method :
 A thread pool is a set of reusable threads that are kept ready to execute tasks instead of creating a new thread every time.
 reuse limited number of threads to execute many tasks efficiently
 
+ExecutorService maintains a pool of reusable worker threads
+
 You submit tasks
 An existing thread picks them up and runs them
 When done, the thread goes back to the pool for reuse
@@ -518,6 +520,19 @@ Future<Integer> future =
 
 System.out.println(future.get()); // 30
 
+execute()
+   |
+   └── Runnable
+       no result
+
+submit()
+   |
+   ├── Runnable
+   └── Callable
+        |
+        v
+      Future
+
 Common Types of Thread Pools ->
 
 1. Fixed Thread Pool -> Executors.newFixedThreadPool(5) -> Fixed number of threads
@@ -525,6 +540,13 @@ Common Types of Thread Pools ->
 3. Single Thread Pool -> Executors.newSingleThreadExecutor() -> Single thread for all tasks
 4. Scheduled Thread Pool -> Executors.newScheduledThreadPool(5) -> Schedules tasks for future execution
 
+
+-----------------------------------------------------------
+12) What happens if we forget shutdown()?
+
+ExecutorService worker threads are normally non-daemon threads.
+
+even if main() finishes, the JVM may continue running because the thread pool's worker threads are alive.
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
