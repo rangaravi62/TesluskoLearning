@@ -78,7 +78,7 @@ Auth Service
    v
 Database
 
-if validates server generates a JWT
+if validated server generates a JWT
 The token is sent to the client
 The client then sends this JWT on subsequent requests, normally in the HTTP header
 
@@ -155,4 +155,58 @@ Some routes are configured as public endpoints:
 /refresh-token
 /health
 
-These will be whitelisted 
+These will be whitelisted
+
+
+----------------------------------------------------------------------------------------------------------
+What is the difference between encoding, encryption, and signing?
+----------------------------------------------------------------------------------------------------------
+
+1. Encoding
+Converts data into another representation
+Ex: You convert HELLO into Base64: SEVMTE8=. Anyone can reverse this conversion. No secret key is needed.
+It does not provide secrecy. Anyone can decode it.
+
+2. Encryption
+Transforms data so that it can only be read by someone with the appropriate decryption key.
+Ex : You encrypt HELLO using a cryptographic key.
+Someone intercepting the encrypted message cannot ordinarily recover the plaintext without the appropriate decryption key.
+
+3. Signing
+Creates a cryptographic signature that allows the recipient to verify authenticity and integrity.
+A signature does not hide the contents of a normal signed JWT.
+
+Encryption answers: Can someone read this data?
+Signing answers: Can I verify that this data is authentic and hasn't been changed?
+
+A typical JWT is encoded and signed, not encrypted. Encrypted JWTs also exist, using a different format called JWE.
+
+
+----------------------------------------------------
+Common JWT Algorithms
+----------------------------------------------------
+
+Common JWT algorithms
+Algorithm	                            Type	                                  Key used
+HS256	            Symmetric signing (HMAC-SHA256)	                       Same secret key to sign and verify
+RS256	            Asymmetric signing (RSA + SHA-256)	                   Private key signs; public key verifies
+ES256	            Asymmetric signing (ECDSA + SHA-256)	               Private key signs; public key verifies
+PS256	            Asymmetric signing (RSA-PSS + SHA-256)	               Private key signs; public key verifies
+RSA-OAEP / A256GCM	Encryption algorithms used in certain JWE configurations	Depends on the encryption and key-management setup
+
+
+Important: HS256, RS256, ES256, and PS256 are signing algorithms. They do not encrypt the JWT payload.
+
+
+-----------------------------------------------------------------
+SHA-256 is a hash function, not an encryption algorithm.
+-----------------------------------------------------------------
+
+SHA-256 stands for Secure Hash Algorithm 256-bit.
+
+It's a cryptographic hash function that takes input of almost any size and produces a fixed-size output of 256 bits (32 bytes).
+
+
+For RS256, the signature is conceptually:
+
+Signature  = RSA-sign-with-privatekey (SHA-256(BASE64URL(header) + "." + BASE64URL(payload)))

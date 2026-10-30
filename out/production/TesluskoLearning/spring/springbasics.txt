@@ -1,0 +1,579 @@
+-----------------------------------------------------------------------------
+My Notes
+-----------------------------------------------------------------------------
+
+Injecting the dependent objects to the target class is called dependency injection
+
+Types of Spring configuration ->
+XML,
+XML + Annotation,
+Java configuration + Annotation,
+Spring Boot + Annotation
+
+-------------------
+XML Config
+-------------------
+
+We'll be configuring all the beans in an XML file
+
+ex:
+<bean id ="telusko" class="com.spring.beans.Telusko">
+<!--        <property ref= "springboot" name="course"></property>--> // field injection
+        <constructor-arg ref = "devops" name="course"></constructor-arg> //constructor injection
+</bean>
+
+Telusko telusko = container.getBean(Telusko.class); // need to use getBean to get the bean or with the bean id
+
+ApplicationContext (Eager Initialization)-> All the beans will be created at the time of loading regardless of getBean method
+                      Cannot load multiple xml files with a single container
+
+ApplicationContext container = new ClassPathXmlApplicationContext("applicationContextConfig2.xml");
+
+Beanfactory(Lazyb Initialization) -> Doesn't create all the beans, beans will be created when requested, when we call getBean method
+               We can load N number of xml files
+
+Spring By default uses ApplicationContext
+
+DefaultListableBeanFactory container = new DefaultListableBeanFactory();
+        XmlBeanDefinitionReader read = new XmlBeanDefinitionReader(container);
+        read.loadBeanDefinitions("applicationContextConfig.xml");
+        read.loadBeanDefinitions("applicationContextConfig2.xml");
+
+
+
+----------------------------
+XML + Annotation
+----------------------------
+
+<context:component-scan base-package="com.spring.xmlPlusAnnotation" />
+this config let's spring know to use annotation through xml
+
+Stereo Type Annotations :
+
+@Component -> To create a bean
+@Service -> for business logic
+@Repository -> db logic
+@Controller, @RestController -> rest apis
+@Configuration -> marks the class as configuration
+
+Ex:
+
+@Service
+public class Telusko {
+//    @Autowired
+//    @Qualifier("devops")  // field injection
+    public ICourse course;
+
+    public Telusko(){
+        System.out.println("Telusko bean has been created!");
+    }
+
+//    @Autowired
+//    public Telusko(@Qualifier("devops") ICourse course) { // for constructor injection qualifier is used for local variables
+    public Telusko(ICourse course) {
+        System.out.println("Telusko Constructor injection");
+        this.course = course;
+    }
+
+    @Autowired     //if we don't prioritize any of spring or devops it'll give NoUniqueBeanDefinitionException
+    @Qualifier("devops")  // qualifier dominates over primary
+    public void setCourse(ICourse course){
+        System.out.println("Telusko Setter injection");
+        this.course = course;
+    }
+
+    public boolean buyCourse(double amount){
+        return course.getTheCourse(amount);
+    }
+}
+
+
+// Annotation -> meta information about the code, it will convey to developer and to the compiler as well
+
+//@Autowired -> to perform dependency injection
+//@Qualifier -> qualify the specified bean for injection if multiple beans are available -> @Qualifier("devops")
+//  this can be done for field injection, setter injection but not for constructor, for contructor we need to specify for local variable
+//@Primary   -> if there's no qualifier specified to avoid ambiguity, we can use this at the class level, qualifier dominates over primary
+//@Bean      -> if we create a java object using new keyword to make this object available with the IOC container we use bean
+
+
+
+-------------------------------------------------
+1) What is Spring Boot and why is it used?
+-------------------------------------------------
+
+Spring boot is a framework built on top of spring that simplifies creating production ready applications.
+It reduces boilerplate configuration by providing auto-configuration, starter dependencies, embed servers
+and production ready tools like actuators
+
+Spring Boot = Spring + auto configuration + embedded server + starters + production tools.
+
+
+starter dependencies ->
+Starter dependencies are predefined dependency bundles provided by Spring Boot.
+They simplify dependency management by grouping commonly used libraries together.
+For example, spring-boot-starter-web brings Spring MVC, embedded Tomcat, Jackson,
+and logging support needed for REST APIs.
+
+
+------------------------------------------
+2) what's @SpringBootApplication for?
+------------------------------------------
+
+@SpringBootApplication  = @SpringBootConfigutration + @EnableAutoConfiguration + @ComponentScan
+
+@SpringBootConfigutration -> marks the class as spring configuration class which is
+used to declare beans using @Bean, similar to @Configuration
+
+@EnableAutoConfiguration -> enables Spring Boot auto-configuration.
+automatically configures the required beans for the dependencies present in the classpath
+For example, if spring-boot-starter-web is present, Spring Boot configures Spring MVC,
+DispatcherServlet, Jackson converters, and embedded Tomcat.
+
+@ComponentScan -> scans the base package recursively and looks for the classes with annotations
+@Component, @Service, @Repository, @RestController, @Controller, @Configuration.
+It creates beans for these classes and registers them in the Spring IOC container
+
+--------------------------------------------------
+3) Spring IOC Container and Dependency Injection.
+--------------------------------------------------
+
+IOC -> Inversion of control
+
+In java we create objects ourselves,
+but in spring the objects are created and managed by spring, the control is inverted to spring,
+this is called Inversion of control
+
+IOC container -> responsible for creating, managing, injecting and destroying objects
+In Spring, objects managed by the IOC container are called Beans.
+
+Dependency Injection ->
+The process of injecting dependent objects to the target class through some external source to achieve loose coupling
+in the spring instead of we creating the objects the spring will create it and injects the required object
+
+->
+public class UserController {
+
+    private UserService userService = new UserService();
+}
+
+here UserController is directly creating UserService, UserController and UserService are tightly coupled
+
+->
+@RestController
+public class UserController {
+
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
+}
+
+Here UserController doesn't create the object directly, spring injects it, UserController and UserService are loosely coupled
+
+---------------------------------------------
+4) Types of Dependency Injection
+---------------------------------------------
+
+Constructor Injection ->
+
+Dependency through constructor
+It makes dependencies mandatory, supports final fields, improves immutability,
+and makes unit testing easier. If a class has only one constructor, Spring automatically uses it for dependency injection,
+so @Autowired is not required.
+
+Dependencies are mandatory
+Object is immutable
+Easy to test
+No reflection issues
+Works well with final fields
+
+@Service
+public class UserService {
+
+    private final UserRepository userRepository;
+
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+}
+
+Note -> In java, A final instance variable must be assigned before the constructor finishes.
+
+
+Setter Injection ->
+
+Dependency through setter method
+Used when dependency is optional or can be changed later.
+
+
+Field Injection ->
+
+Directly on field using @Autowired
+
+@Service
+public class UserService {
+
+    @Autowired
+    private UserRepository userRepository;
+}
+
+this is not recommended
+
+Hard to unit test
+Cannot use final fields
+
+---------------------------------------
+5) What is a Bean?
+---------------------------------------
+
+An object which is created, managed by spring IOC container is called a Bean
+
+To create beans we use
+
+-> stereo type annotations (@Component, @Service, or @Repository)
+-> using @Bean
+
+use @Component annotations when the class is your own class
+use Bean when the class is from a third party library or you need custom object creation logic.
+
+Ex:
+
+@Bean
+public ObjectMapper objectMapper() {
+    ObjectMapper mapper = new ObjectMapper();
+    mapper.findAndRegisterModules();
+    return mapper;
+}
+
+You cannot go inside the ObjectMapper class and add @Component, because it is from Jackson library.
+So you create it manually using @Bean.
+
+
+---------------------------------------------
+6) Bean Scopes
+_____________________________________________
+
+singleton -> single object per container
+
+prototype -> New object every time requested
+
+request -> one object per http request
+
+session -> One object per HTTP session
+
+application -> One object per ServletContext
+
+By default, Spring beans are singleton.
+
+
+
+TODO: Need to watch a video on this
+
+
+------------------------------------------
+7) What is Bean Lifecycle?
+------------------------------------------
+
+
+Bean lifecycle means:
+The journey of a Spring bean from creation to destruction.
+
+Class detected by ComponentScan
+        ↓
+Object created
+        ↓
+Dependencies injected
+        ↓
+@PostConstruct method executed
+        ↓
+Bean ready to use
+        ↓
+Application running
+        ↓
+@PreDestroy method executed
+        ↓
+Bean destroyed
+
+
+Ex :
+
+
+@Service
+public class PaymentService {
+
+    private final PaymentRepository paymentRepository;
+
+    public PaymentService(PaymentRepository paymentRepository) {
+        System.out.println("1. Constructor called");
+        this.paymentRepository = paymentRepository;
+    }
+
+    @PostConstruct
+    public void init() {
+        System.out.println("2. Bean initialized");
+    }
+
+    public void processPayment() {
+        System.out.println("3. Business method called");
+    }
+
+    @PreDestroy
+    public void destroy() {
+        System.out.println("4. Bean destroyed");
+    }
+}
+
+output ->
+
+1. Constructor called
+2. Bean initialized
+3. Business method called
+4. Bean destroyed
+
+
+For constructor injection:
+public PaymentService(PaymentRepository paymentRepository) {
+    this.paymentRepository = paymentRepository;
+}
+Dependency is injected at object creation time.
+
+
+For field/setter injection:
+@Autowired
+private PaymentRepository paymentRepository;
+Dependency is injected after object creation.
+
+
+
+@PostConstruct is used to run logic after dependency injection is completed.
+
+Example:
+
+@PostConstruct
+public void init() {
+    System.out.println("DB cache loading started");
+}
+
+
+
+--------------------------------------
+8) stereotype annotations.
+--------------------------------------
+
+@Component
+@Service      -> business logic layer.
+@Repository   -> data access layer.
+@Controller   -> is used in Spring MVC when we return views/pages, like JSP, Thymeleaf, or HTML pages.
+@RestController -> is used for REST APIs.
+@Configuration
+
+
+------------------------------------------------------------
+9) Next topic: @Autowired, @Qualifier, and @Primary
+------------------------------------------------------------
+
+@Autowired -> injects the required bean from the IOC container
+
+@Qualifier -> @Qualifier is used when multiple beans of the same type are available.
+It helps Spring identify exactly which bean should be injected by specifying the bean name.
+
+@Primary -> it is used to mark one bean as the default choice when multiple beans of the same type are available.
+
+| Feature        | `@Qualifier`                                    | `@Primary`                          |
+| -------------- | ----------------------------------------------- | ----------------------------------- |
+| Purpose        | Select specific bean                            | Set default bean                    |
+| Used at        | Injection point                                 | Bean class/config                   |
+| More explicit? | Yes                                             | No                                  |
+| Best when      | Different places need different implementations | One implementation is commonly used |
+
+------------------------------------
+10) @Configuration and @Bean
+------------------------------------
+
+@Configuration -> marks the class as a spring configuration class, used to declare bean definitions
+@Bean          -> used to manually create and register an object in spring ioc container
+
+Point	                            @Component	                                @Bean
+Used on	                                Class	                                Method
+Best for	                        Our own classes	                       Third-party/custom object creation
+Object creation	                Spring creates object automatically	            We create and return object
+Example	                            @Service UserService	                    @Bean ObjectMapper
+
+
+
+------------------------------------------------------------
+11) Spring Boot Application Properties / YAML Configuration
+------------------------------------------------------------
+
+Spring Boot project uses application.properties or application.yml.
+
+we do not hard code values, instead we place them in configuration files
+Spring Boot reads these values from:
+application.properties
+application.yml
+environment variables
+command-line arguments
+profile-specific files
+
+application.properties ->
+
+it is a key=value format file
+
+ex :
+server.port=8081
+spring.datasource.url=jdbc:mysql://localhost:3306/userdb
+spring.datasource.username=root
+spring.datasource.password=root
+
+application.yml ->
+
+YAML is a hierarchical format file
+
+ex :
+
+server:
+  port: 8081
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/userdb
+    username: root
+    password: root
+
+Both are used for externalized configuration. YAML is more readable for nested configuration,
+but indentation must be correct.
+
+
+@Value -> used to inject individual property values
+ ex:
+
+@Value("${app.name}") // app.name will be present in the config file
+private String appName;
+
+@ConfigurationProperties -> used to bind groups of related values
+
+ex:
+app:
+  jwt:
+    secret: mySecretKey
+    expiry: 3600000
+if this is present in YAML file
+
+@Component
+@ConfigurationProperties(prefix = "app.jwt")
+public class JwtProperties {
+
+    private String secret;
+    private long expiry;
+
+    public String getSecret() {
+        return secret;
+    }
+
+    public void setSecret(String secret) {
+        this.secret = secret;
+    }
+
+    public long getExpiry() {
+        return expiry;
+    }
+
+    public void setExpiry(long expiry) {
+        this.expiry = expiry;
+    }
+}
+
+
+NOTE : @ConfigurationProperties is preferred when we have multiple related properties because \
+it maps them into a type-safe Java class.
+
+
+
+-----------------------------------
+11) Profiles
+___________________________________
+
+Profiles helps us to maintain different config files for different environments
+Profiles are used to maintain environment-specific configuration and beans.
+
+Foe example if we have dev,test, prod environments
+we can have 3 yaml config files
+
+application.yml
+application-dev.yml
+application-prod.yml
+
+Main File ->
+
+spring:
+  profiles:
+    active: dev
+
+application-dev.yml ->
+server:
+  port: 8081
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/devdb
+
+
+application-prod.yml ->
+
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:mysql://prod-server:3306/proddb
+
+
+When active profile is dev, Spring Boot loads dev-specific configuration.
+
+When active profile is prod, Spring Boot loads prod-specific configuration.
+
+
+
+-------------------------------------------------------------------
+12) How to activate spring boot profile?
+-------------------------------------------------------------------
+
+Option 1: In config file
+spring.profiles.active=dev
+
+Option 2: Command line
+java -jar app.jar --spring.profiles.active=prod
+
+Option 3: Environment variable
+SPRING_PROFILES_ACTIVE=prod
+
+In real projects, production profile is usually passed through environment variable or
+deployment configuration, not hardcoded.
+
+-------------------------------------
+13) Profile-specific beans
+-------------------------------------
+
+Sometimes we want different beans for different environments.
+
+@Configuration
+public class DataConfig {
+
+    @Bean
+    @Profile("dev")
+    public DataSource devDataSource() {
+        return devDataSource;
+    }
+
+    @Bean
+    @Profile("prod")
+    public DataSource prodDataSource() {
+        return prodDataSource;
+    }
+}
+
+dev profile active  → devDataSource bean created
+prod profile active → prodDataSource bean created
+

@@ -805,6 +805,36 @@ latch.await();
 Fixed count
 One-time use
 
+import java.util.concurrent.CountDownLatch;
+
+public class Example {
+
+    public static void main(String[] args) throws InterruptedException {
+
+        CountDownLatch latch = new CountDownLatch(3);
+
+        Runnable worker = () -> {
+            System.out.println(Thread.currentThread().getName() + " working");
+
+            latch.countDown();
+
+            System.out.println(
+                Thread.currentThread().getName() + " finished"
+            );
+        };
+
+        new Thread(worker, "T1").start();
+        new Thread(worker, "T2").start();
+        new Thread(worker, "T3").start();
+
+        latch.await();
+
+        System.out.println("All workers completed");
+    }
+}
+
+
+
 
 
 CyclicBarrier is a synchronization aid that allows a group of threads to wait for each other at a common point (barrier)

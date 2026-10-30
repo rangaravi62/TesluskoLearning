@@ -1,4 +1,4 @@
-String literals will be created in string pool inside heap memory which doesn't allow duplicates.
+    String literals will be created in string pool inside heap memory which doesn't allow duplicates.
 ex : String s1 = "ravi"
 
 Strings created with new keyword will be created in heap memory.

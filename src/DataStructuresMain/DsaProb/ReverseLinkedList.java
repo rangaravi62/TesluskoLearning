@@ -12,7 +12,7 @@ public class ReverseLinkedList {
         list.printLL();
         list.reverseLL();
         list.printLL();
-
+        
     }
 
 }

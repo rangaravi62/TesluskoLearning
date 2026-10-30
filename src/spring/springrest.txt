@@ -421,3 +421,186 @@ public class UserController {
     }
 }
 
+
+-----------------------------------------------------
+@Transactional Internals in Spring Boot
+-----------------------------------------------------
+
+@Transactional in Spring is mainly implemented using Spring AOP + proxies + a TransactionManager.
+
+@Service
+public class OrderService {
+
+    @Transactional
+    public void placeOrder() {
+        orderRepository.save(order);
+        paymentRepository.save(payment);
+    }
+}
+
+Spring does not put transaction code inside your method.
+It wraps your method call with a proxy that starts the transaction before the method and commits/rolls it back afterward.
+
+The flow is roughly:
+
+Caller
+  |
+  v
+OrderService Proxy
+  |
+  |  @Transactional detected
+  |
+  v
+TransactionInterceptor
+  |
+  | begin transaction
+  v
+TransactionManager
+  |
+  v
+Actual OrderService.placeOrder()
+  |
+  | repository calls
+  v
+Database
+  |
+  v
+TransactionInterceptor
+  |
+  +---- success ----> commit
+  |
+  +---- exception --> rollback
+
+
+
+1. Spring creates a proxy
+
+During application startup, Spring finds beans containing transactional methods and creates a proxy class
+
+Depending on the situation, Spring can use:
+JDK Dynamic Proxy
+CGLIB subclass proxy
+
+public OrderServiceProxy {
+
+private OrderService target;
+
+public void placeOrder() {
+
+    startTransaction();
+
+    try {
+
+        target.placeOrder();
+
+        commitTransaction();
+
+    } catch (Exception e) {
+
+        rollbackTransaction();
+
+        throw e;
+    }
+}
+
+}
+
+
+2. TransactionInterceptor intercepts the call
+
+Internally, Spring AOP uses something called: TransactionInterceptor
+
+This is essentially the AOP advice responsible for transactional behavior.
+
+Proxy
+  |
+  v
+TransactionInterceptor
+  |
+  v
+@Transactional metadata
+
+The interceptor checks: Propagation , rollBackFor , timeout etc and Then it decides what kind of transaction should be created.
+
+
+3. Spring asks the TransactionManager
+
+Spring itself doesn't directly execute: BEGIN TRANSACTION
+
+Instead it delegates that responsibility to a: JpaTransactionManager (in case of SpringDataJpa)
+
+
+4. The transaction is started
+
+5. Spring binds the connection to the current thread
+
+Spring uses thread-bound transaction resources.
+Your actual method executes Now
+If the method succeeds → COMMIT
+If an exception occurs → ROLLBACK
+
+
+----------------------------------
+Important rollback rule
+----------------------------------
+
+By default Spring rolls back for:
+RuntimeException
+Error
+
+For others we need to specify
+
+@Transactional(rollbackFor = Exception.class)
+    public void method() throws Exception {
+}
+
+Hibernate flush() happens before commit
+
+
+-------------------------------------
+Propagation Levels
+-------------------------------------
+
+Propagation.REQUIRED --->
+
+Default Propagation is Propagation.REQUIRED
+
+methodA
+  |
+  | Transaction T1 starts
+  |
+  v
+methodB
+  |
+  | existing T1 found
+  |
+  v
+joins T1
+
+
+@Transactional(propagation = Propagation.REQUIRES_NEW) --->
+
+methodA
+   |
+   | T1
+   v
+methodB
+   |
+   | suspend T1
+   | start T2
+   v
+commit/rollback T2
+   |
+   v
+resume T1
+
+T1 is independent from T2
+Uses New Transaction
+
+
+
+
+
+
+
+

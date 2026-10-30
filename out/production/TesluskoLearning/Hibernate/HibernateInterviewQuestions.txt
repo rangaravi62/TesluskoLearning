@@ -24,9 +24,15 @@ Query
 
 Configuration -> Reads the hibernate configuration
 
+Configuration configuration = new Configuration();
+configuration.configure("hibernate.cfg.xml");
+
 SessionFactory ->
 SessionFActory is a heavyweight object used to create Hibernate sessions
 usually we create one SessionFactory per database while bootup of the application
+SessionFactory sessionFactory = configuration.buildSessionFactory();
+
+
 
 Session -> used to interact with the database and perform db operations
 
@@ -91,6 +97,10 @@ session.delete(user);
 
 Ex :
 
+Configuration configuration = new Configuration();
+configuration.configure("hibernate.cfg.xml");
+
+SessionFactory sessionFactory = configuration.buildSessionFactory();
 Session session = sessionFactory.openSession();
 Transaction tx = session.beginTransaction();
 
@@ -376,3 +386,107 @@ but it does not commit the transaction. The transaction is still active and can 
 
 commit() completes the transaction and makes the changes permanent.
 Hibernate usually performs a flush automatically before commit.
+
+
+------------------------------------------------------------
+Locking -> Optimistic Locking and Pessimistic Locking
+------------------------------------------------------------
+
+Why do we need locking?
+
+Imagine a bank account has a balance of ₹10,000.
+
+Two transactions read the balance at the same time:
+- Transaction A withdraws ₹2,000.
+- Transaction B withdraws ₹3,000.
+Both read ₹10,000. Without proper concurrency control, one update could overwrite the other, causing a lost update.
+
+Locking helps prevent this kind of problem.
+
+
+-----------------------------------
+Optimistic locking
+-----------------------------------
+
+Optimistic locking assumes that conflicts are rare. Transactions can read and work on the same record concurrently,
+and the system detects conflicting updates when they occur.
+
+In JPA, we commonly use @Version.
+
+@Entity
+public class Account {
+
+    @Id
+    private Long id;
+
+    private double balance;
+
+    @Version
+    private Long version;
+}
+
+Let's say an account balance is 10000 RS/- and it's version is 1
+
+Transaction A reads balance ₹10,000, version 1.
+Transaction B also reads balance ₹10,000, version 1.
+Transaction A updates the balance to ₹8,000 and commits. The version becomes 2.
+Transaction B tries to update using version 1.
+Hibernate detects that the version has changed and rejects the stale update.
+
+Conceptually,
+
+UPDATE account
+SET balance = 7000, version = 2
+WHERE id = 1 AND version = 1;
+
+Because the stored version is now 2, no row matches version 1.
+Hibernate detects the conflict and throws an optimistic-locking exception.
+
+Advantages ---> Good concurrency, no need to hold a database lock throughout the business operation.
+
+Disadvantage ---> If a conflict occurs, the transaction may need to be retried or the user may need to resolve the conflict.
+
+
+---------------------------------
+Pessimistic locking
+---------------------------------
+
+Pessimistic locking assumes conflicts are likely enough to justify acquiring a database lock.
+
+The application locks the row so that competing transactions cannot modify it freely while the lock is held.
+
+With Spring Data JPA:
+
+@Lock(LockModeType.PESSIMISTIC_WRITE)
+@Query("SELECT a FROM Account a WHERE a.id = :id")
+Optional<Account> findByIdForUpdate(Long id);
+
+Usage inside a transaction:
+
+@Transactional
+public void withdraw(Long accountId, double amount) {
+    Account account = repository.findByIdForUpdate(accountId)
+        .orElseThrow();
+
+    if (account.getBalance() < amount) {
+        throw new IllegalArgumentException("Insufficient balance");
+    }
+
+    account.setBalance(account.getBalance() - amount);
+}
+
+The database obtains a write lock on the selected row.
+Another transaction trying to acquire a conflicting lock or update that row may have to wait or fail,
+depending on the database and transaction settings.
+
+Advantages: Prevents competing transactions from proceeding with conflicting changes while the lock is held.
+
+Disadvantages: Transactions may wait, time out, or deadlock. Holding locks for too long can reduce performance.
+
+
+
+Optimistic: Editing customer profiles, updating ordinary business records, or other workloads
+where simultaneous modifications are uncommon.
+
+Pessimistic: Highly contended records or operations that need to coordinate concurrent access,
+provided the lock scope and transaction duration are carefully controlled.

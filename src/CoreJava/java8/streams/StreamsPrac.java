@@ -1,6 +1,7 @@
 package CoreJava.java8.streams;
 
 import java.util.*;
+import java.util.stream.IntStream;
 
 
 public class StreamsPrac {
@@ -67,10 +68,26 @@ public class StreamsPrac {
 //didn't understand
     public static void main(String[] args) {
 
-        List<Integer> list = Arrays.asList(22,44,22,55,74,86,23,12,46,13,45);
-        Integer totalEle= list.parallelStream().max(Integer::compare).get();
-        System.out.println(totalEle);
+        String str = "deloitte interview";
+        int len  = str.length();
+        char arr[] = new char[len];
+        IntStream.range(0,len).forEach(i -> {if(isVowel(str.charAt(i))){
+            arr[i] = str.charAt(i);
+        }});
+        IntStream.range(0,len).forEach(i -> {
+            if(!isVowel(str.charAt(i))){
+                int j = 0;
+                while(!isVowel(arr[j])) j++;
+                arr[j] = str.charAt(len - i -1);
+            }
+        });
+        System.out.println(Arrays.toString(arr));
+    }
 
+
+    public static boolean isVowel(char c){
+        if(c == 'a' || c=='e'||c=='i'||c=='o'||c=='u') return true;
+        return false;
     }
 
 

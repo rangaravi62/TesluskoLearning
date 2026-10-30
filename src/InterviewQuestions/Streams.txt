@@ -163,11 +163,11 @@ Map<Boolean, List<Student>> map =
 ------------------------------------------------------------------------------------------------------------------------
 -> Comparable vs Comparator in Java
 
-Comparable is used to define the natural ordering of a class using compareTo().
+Comparable is used to define the natural/default ordering of a class using compareTo().
 Comparator is used to define external/custom sorting using compare(), and allows multiple sorting strategies.
 
 
-| Comparable                                       | Comparator                                |
+    | Comparable                                       | Comparator                                |
 | ------------------------------------------------ | ----------------------------------------- |
 | `java.lang.Comparable`                           | `java.util.Comparator`                    |
 | Sorting logic is inside the class                | Sorting logic is outside the class        |
