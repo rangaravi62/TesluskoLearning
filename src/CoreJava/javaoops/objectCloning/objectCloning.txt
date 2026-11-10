@@ -25,8 +25,8 @@ Copies the field values (primitives are copied, references are copied but not th
 Shallow Cloning
 -----------------------------
 
-Shallow copy means primitive fields are copied by value,
-but reference fields (like address) still point to the same object.
+Shallow copy means primitive fields are copied by value, reference types are copied by address
+but reference fields (like address) still point to the same object. since the referenced fields are not cloned
 
 
 -----------------------------

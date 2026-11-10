@@ -1,4 +1,4 @@
-package ExceptionHandling_35.Exception;
+package CoreJava.ExceptionHandling_35.Exception;
 
 import java.sql.SQLException;
 import java.util.Scanner;

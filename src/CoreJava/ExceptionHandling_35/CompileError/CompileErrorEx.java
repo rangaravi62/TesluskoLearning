@@ -1,4 +1,4 @@
-package ExceptionHandling_35.CompileError;
+package CoreJava.ExceptionHandling_35.CompileError;
 
 public class CompileErrorEx {
     public static void main(String[] args) {

@@ -219,3 +219,18 @@ employees.sort(Comparator.comparing(Employee::getSalary));
 
 
 
+-------------------------------------------------------------------
+Diff between forEach and peek
+-------------------------------------------------------------------
+
+forEach ->
+
+it is a terminal operation
+consumes the stream
+Executes the given action for every element.
+Does not return another Stream.
+Once forEach() is executed, the stream is consumed and cannot be reused.
+
+peek() ->
+
+

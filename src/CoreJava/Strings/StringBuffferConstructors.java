@@ -1,4 +1,4 @@
-package Strings;
+package CoreJava.Strings;
 
 public class StringBuffferConstructors {
     public static void main(String[] args) {

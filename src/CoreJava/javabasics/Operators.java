@@ -25,6 +25,11 @@ public class Operators {
 //        System.out.println(c);//10
 
 
+//        Java evaluates expressions left to right.
+//        ++a → Increment first, then use the value.
+//        a++ → Use the current value first, then increment
+//        --a → Decrement first, then use the value.
+//        a-- → Use the current value first, then decrement.
 
 
     }

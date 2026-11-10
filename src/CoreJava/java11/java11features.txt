@@ -5,6 +5,7 @@ String Enhancements
 String.strip() - Removes leading and trailing whitespace characters from a string.
 Note: strip() vs trim() → strip() is Unicode-aware; trim() is ASCII-only.
 
+stripLeading(), stripTrailing()
 isBlank() -> returns true if string is empty o having white spaces
 lines() -> returns a stream of lines
 repeat(int n) -> repeats the string n times
