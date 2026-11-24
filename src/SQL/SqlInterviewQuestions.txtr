@@ -1,0 +1,115 @@
+------------------------------------------------------------------------------------------------------------------------
+1. What is the difference between DELETE, TRUNCATE, and DROP?
+------------------------------------------------------------------------------------------------------------------------
+
+
+Feature	                        DELETE	                            TRUNCATE	                        DROP
+Purpose	                    Deletes selected rows	                Deletes all rows            	Deletes entire table
+WHERE clause	                Yes	                                    No	                                No
+Table structure	                Retained                        	   Retained	                        Removed
+Speed	                        Generally slower	                   Generally faster	                    Fast
+Rollback	                Depends on DB and transaction	    Depends on DB and transaction	        Depends on DB and transaction
+
+
+DELETE is a DML command used to remove specific rows or all rows from a table.
+TRUNCATE removes all records while retaining the table structure.
+DROP removes the entire table, including its structure and data.
+
+------------------------------------------------------------------------------------------------------------------------
+2. What is the difference between WHERE and HAVING?
+------------------------------------------------------------------------------------------------------------------------
+
+                WHERE	                                                      HAVING
+Filters individual rows	                                                Filters grouped results
+Applied before GROUP BY	                                                Applied after GROUP BY
+Cannot directly filter aggregate results	                            Can filter aggregate results
+
+Example:
+
+-- WHERE
+SELECT *
+FROM employee
+WHERE salary > 50000;
+
+-- HAVING
+SELECT department_id, AVG(salary)
+FROM employee
+GROUP BY department_id
+HAVING AVG(salary) > 50000;
+
+WHERE filters records before grouping, whereas HAVING filters groups after GROUP BY.
+HAVING is commonly used with aggregate functions like COUNT, SUM, and AVG.
+
+
+------------------------------------------------------------------------------------------------------------------------
+3. What is the difference between UNION and UNION ALL?
+------------------------------------------------------------------------------------------------------------------------
+
+UNION combines results from multiple SELECT statements and removes duplicates.
+UNION ALL combines results without removing duplicates, making it generally more efficient.
+
+SELECT name FROM employee
+UNION
+SELECT name FROM manager;
+
+SELECT name FROM employee
+UNION ALL
+SELECT name FROM manager;
+
+
+------------------------------------------------------------------------------------------------------------------------
+4. What is the difference between COUNT(*), COUNT(1), and COUNT(column)?
+-------------------------------------------------------------------------------------------------------------------------
+COUNT(*) counts all rows, including rows containing NULL values.
+COUNT(1) also counts all rows.
+COUNT(column) counts only rows where that particular column is NOT NULL.
+
+
+------------------------------------------------------------------------------------------------------------------------
+5. What is a Subquery? Explain correlated and non-correlated subqueries.
+------------------------------------------------------------------------------------------------------------------------
+A subquery is a query written inside another SQL query.
+
+Non-correlated subquery ->
+
+The inner query executes independently of the outer query.
+SELECT *
+FROM employee
+WHERE salary > (
+    SELECT AVG(salary)
+    FROM employee
+);
+
+Correlated subquery ->
+
+The inner query depends on the outer query and references its columns.
+SELECT *
+FROM employee e
+WHERE salary > (
+    SELECT AVG(salary)
+    FROM employee e2
+    WHERE e2.dept_id = e.dept_id
+);
+
+
+
+
+------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+
+

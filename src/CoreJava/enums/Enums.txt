@@ -10,3 +10,76 @@ We cannot create instance of an Enum, because it contains private constructors o
 
 
 
+Enum vs Constants
+
+Feature	                                    Constants	                                Enum
+Declaration	                                static final	                            enum
+Type safety	                                Not guaranteed	                            Type-safe
+Allowed values	                            Any compatible value	                    Only predefined values
+Grouping	                                Usually class-level fields	                A dedicated enum type
+Methods	                                    No enum-specific behaviour	                Can contain methods
+Constructors	                            Normal class rules	                        Private constructors
+Switch support	                            Depends on constant type	                Direct enum support
+Maintainability	                            Less structured	                            More structured
+
+
+
+Why is Enum preferred over Constants?
+
+1. Type Safety
+
+With constants:
+public static final int SUCCESS = 1;
+public static final int FAILED = 2;
+You can accidentally pass any integer.
+
+With Enum:
+public enum Status {
+    SUCCESS,
+    FAILED
+}
+Only valid Status values can be passed.
+
+2. Prevents Invalid Values
+Enum restricts the possible values to those defined in the enum.
+
+3. Better Readability
+Compare:
+processStatus(1);
+
+With:
+processStatus(Status.SUCCESS);
+
+The second is much easier to understand.
+
+4. Can Have Fields, Constructors and Methods
+Enums can contain additional information.
+
+For example:
+
+public enum OrderStatus {
+
+    CREATED(1, "Order Created"),
+    PROCESSING(2, "Order Processing"),
+    COMPLETED(3, "Order Completed");
+
+    private final int code;
+    private final String description;
+
+    OrderStatus(int code, String description) {
+        this.code = code;
+        this.description = description;
+    }
+
+    public int getCode() {
+        return code;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+}
+
+System.out.println(OrderStatus.CREATED.getCode()); //1
+System.out.println(OrderStatus.CREATED.getDescription()); //Order Created
+

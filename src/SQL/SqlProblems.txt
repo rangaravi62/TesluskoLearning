@@ -1,0 +1,193 @@
+---------------------------------------------------------
+1) Second Highest Salary
+---------------------------------------------------------
+
+EMPLOYEE
++----+----------+--------+
+| id | name     | salary |
++----+----------+--------+
+| 1  | Ravi     | 50000  |
+| 2  | Arun     | 70000  |
+| 3  | Kiran    | 60000  |
+| 4  | Priya    | 70000  |
+| 5  | Neha     | 80000  |
++----+----------+--------+
+
+Find the second highest distinct salary
+
+
+select MAX(salary) from EMPLOYEE where salary < (select MAX(salary) from EMPLOYEE);
+
+select distinct salary from
+    (select salary, DENSE_RANK() over (order by salary desc) as rank from EMPLOYEE) emp
+where emp.rank = 2;
+
+Nth Highest Salary ----------------
+
+SELECT employee_name, salary
+FROM (
+    SELECT employee_name,
+           salary,
+           DENSE_RANK() OVER (ORDER BY salary DESC) AS salary_rank
+    FROM employee
+) e
+WHERE salary_rank = N;
+
+
+------------------------------------------------------------
+2) Highest Salary in Each Department
+------------------------------------------------------------
+
+EMPLOYEE
++----+--------+--------+---------+
+| id | name   | salary | dept_id |
++----+--------+--------+---------+
+| 1  | Ravi   | 50000  | 10      |
+| 2  | Arun   | 70000  | 10      |
+| 3  | Kiran  | 60000  | 20      |
+| 4  | Priya  | 80000  | 20      |
+| 5  | Neha   | 75000  | 30      |
++----+--------+--------+---------+
+
+DEPARTMENT
++----+-------------+
+| id | dept_name   |
++----+-------------+
+| 10 | Engineering |
+| 20 | Finance     |
+| 30 | HR          |
++----+-------------+
+
+
+select o.dept_name, o.name, o.salary from (select d.dept_name, e.name, e.salary,
+        DENSE_RANK() over (partition by e.dept_id order by salary desc) as rank
+from EMPLOYEE e inner join DEPARTMENT d on e.dept_id = d.id) o
+where o.rank = 1;
+
+
+NOTE :
+
+GROUP BY department
+→ gives max salary per department
+
+But if you also need the employee name,
+→ you need a subquery/join or window function.
+
+
+------------------------------------------------------------
+3) Top 2 Salaries in Each Department
+------------------------------------------------------------
+
+Using the same tables, write a query to return the top 2 distinct salaries in each department.
+
+select o.dept_name, o.name, o.salary from (select d.dept_name, e.name, e.salary,
+        DENSE_RANK() over (partition by e.dept_id order by salary desc) as rank
+from EMPLOYEE e inner join DEPARTMENT d on e.dept_id = d.id) o
+where o.rank <=2;
+
+
+
+------------------------------------------------------------
+4) Find Duplicate Records
+------------------------------------------------------------
+
+EMPLOYEE
++----+--------+-------------------+
+| id | name   | email             |
++----+--------+-------------------+
+| 1  | Ravi   | ravi@gmail.com    |
+| 2  | Arun   | arun@gmail.com    |
+| 3  | Ravi2  | ravi@gmail.com    |
+| 4  | Priya  | priya@gmail.com   |
+| 5  | Arun2  | arun@gmail.com    |
++----+--------+-------------------+
+
+select email from EMPLOYEE group by email having count(email) > 1;
+
+-------------------------------------------------------------
+5) Running Balance / Running Total
+-------------------------------------------------------------
+
+TRANSACTIONS
++----+------------+--------+
+| id | txn_date   | amount |
++----+------------+--------+
+| 1  | 2026-01-01 | 1000   |
+| 2  | 2026-01-02 | 500    |
+| 3  | 2026-01-03 | -200   |
+| 4  | 2026-01-04 | 700    |
++----+------------+--------+
+
+
+Should return
+
+txn_date   | amount | running_balance
+2026-01-01 | 1000   | 1000
+2026-01-02 | 500    | 1500
+2026-01-03 | -200   | 1300
+2026-01-04 | 700    | 2000
+
+
+select txn_data, amount,
+    SUM(amount) over (order by txn_date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) as sum from TRANSACTIONS txn;
+
+
+-------------------------------------------------------------
+6) Employee and Manager Name Using Self Join
+-------------------------------------------------------------
+
+EMPLOYEE
++----+--------+------------+
+| id | name   | manager_id |
++----+--------+------------+
+| 1  | Ravi   | NULL       |
+| 2  | Arun   | 1          |
+| 3  | Priya  | 1          |
+| 4  | Kiran  | 2          |
+| 5  | Neha   | 2          |
++----+--------+------------+
+
+Write a query to return:
+employee | manager
+---------|--------
+Arun     | Ravi
+Priya    | Ravi
+Kiran    | Arun
+Neha     | Arun
+
+
+select e.name AS employee,m.name as manager from EMPLOYEE e inner join EMPLOYEE m on e.manager_id = m.id;
+
+
+-------------------------------------------------------------
+7) Employees Earning More Than Their Manager
+-------------------------------------------------------------
+
+EMPLOYEE
++----+--------+--------+------------+
+| id | name   | salary | manager_id |
++----+--------+--------+------------+
+| 1  | Ravi   | 90000  | NULL       |
+| 2  | Arun   | 95000  | 1          |
+| 3  | Priya  | 70000  | 1          |
+| 4  | Kiran  | 85000  | 2          |
+| 5  | Neha   | 98000  | 2          |
++----+--------+--------+------------+
+
+Expected output:
+
+employee | employee_salary | manager | manager_salary
+---------|-----------------|---------|---------------
+Arun     | 95000           | Ravi    | 90000
+Neha     | 98000           | Arun    | 95000
+
+
+select e.name as employee, e.salary as employee_salary m.name as manager, m.salary as manager_salary
+from EMPLOYEE e inner join EMPLOYEE m on e.manager_id = m.id where e.salary > m.salary;
+
+
+------------------------------------------------------------------
+8) Employees earning more than department average
+------------------------------------------------------------------
+
+select * from employee e where salary > (select AVG(salary) from employee where department_id = e.department_id)

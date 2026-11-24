@@ -240,3 +240,75 @@ Explain the difference between @RestController and @Controller in Spring Boot.
 @RestController -> @Controller + @ResponseBody
 
 @ResponseBody -> returns data directly in the response body.
+
+
+
+------------------------------------------------------------------
+Complete internal flow Of a Transaction
+------------------------------------------------------------------
+
+Client
+  |
+  v
+Spring Proxy
+  |
+  v
+TransactionInterceptor
+  |
+  | reads @Transactional
+  |
+  v
+PlatformTransactionManager
+  |
+  | getTransaction()
+  |
+  v
+Open / obtain DB Connection
+  |
+  | AutoCommit = false
+  |
+  v
+Bind transaction resources to current thread
+  |
+  v
+Actual Service Method
+  |
+  v
+Repository
+  |
+  v
+Hibernate / EntityManager
+  |
+  v
+Database
+  |
+  +---------------------------+
+  |                           |
+Success                    RuntimeException
+  |                           |
+  v                           v
+flush()                    rollback()
+  |                           |
+  v                           v
+commit()                  Transaction ends
+  |
+  v
+Transaction ends
+
+
+
+------------------------------------------------------------------------------------------------------------------------
+
+@Component: Put this annotation on a class so component scanning can discover and register it.
+
+@Service: Specialized @Component, generally used for business logic.
+
+@Repository: Specialized @Component, generally used for persistence logic. It also supports persistence exception translation.
+
+@Controller: Specialized @Component, used for Spring MVC controllers.
+
+@RestController: Combines @Controller and @ResponseBody.
+
+@Configuration: Identifies a configuration class containing bean definitions.
+
+@Bean: Put this on a method, generally inside a configuration class, to register the method's returned object as a bean.

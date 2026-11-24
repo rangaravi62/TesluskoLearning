@@ -42,6 +42,10 @@ class Dog extends Animal {
     void makeSound() { System.out.println("Woof!"); }
 }
 
+Why does an abstract class have a constructor? --->
+
+Although we cannot instantiate an abstract class directly, its constructor executes when a concrete subclass is instantiated.
+
 -----------------------
 Interface
 -----------------------

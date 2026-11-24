@@ -371,7 +371,7 @@ public void init() {
 
 
 ------------------------------------------------------------
-9) Next topic: @Autowired, @Qualifier, and @Primary
+9) @Autowired, @Qualifier, and @Primary
 ------------------------------------------------------------
 
 @Autowired -> injects the required bean from the IOC container

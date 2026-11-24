@@ -33,6 +33,21 @@ Optimized worst case (Red-Black tree) : Access -> O(logn), insertion -> O(logn),
 
 ---------------------------------------------------------------------------------------------------------
 
+-> equals() and hashCode() contract
+
+Rule No.1 :  If two objects are equals then those two objects should return the same hashcode.
+Rule No.2 :  If two objects have the same hashcode then those 2 objects are not necessarily equal.
+
+-> What happens if we override equals() but not hashCode()?
+
+This can cause unexpected behaviour in HashMap and HashSet.
+Two same objects should be having same hashcode
+but if we haven't overridden hashcode then the hash codes of the same objects may be different
+
+If we use them as HashMap keys, the map may treat them as separate keys.
+Whenever we override equals(), we should also override hashCode() to maintain the contract.
+---------------------------------------------------------------------------------------------------------
+
 -> Q. How to use a 'custom object' as 'key' in Hashmap ?
 To use a custom object as a key in a hashmap, we need to override the equals and hashcode methods in the custom class.
 equals method is used to check if two keys are equal or not.
@@ -402,4 +417,21 @@ null elements are not allowed
 Arrays.asList() returns a mutable list, it is backed by an array, we can modify using set metho
 list1.set(1, "X");
 null elements are allowed
+
+
+
+-----------------------------------------------------------------------------------------------
+-> Q. HashMap                                 vs                              Hashtable
+
+Feature	                            HashMap	                                                Hashtable
+Thread safety	                    Not synchronized	                                    Synchronized
+Performance	                        Generally faster	                                    Generally slower
+Null key	                        Allows one null key	                                    Does not allow null keys
+Null values                     	Allows multiple null values	                            Does not allow null values
+Introduction	                    Java 1.2	                                            Java 1.0
+Legacy class	                    No	                                                    Yes
+Iteration	                        Iterator (fail-fast)	                                Enumerator (not fail-fast), also supports Iterator
+Inheritance	                        Extends AbstractMap	                                    Extends Dictionary
+
+
 

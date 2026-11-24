@@ -270,7 +270,7 @@ OutOfMemoryError
 
 
 --------------------------------------------------------
-What is a Heap Dump
+What is a Heap Dump and Thread Dump
 --------------------------------------------------------
 
 Heap Dump : A heap dump is basically a snapshot of all objects currently present in the Java heap.

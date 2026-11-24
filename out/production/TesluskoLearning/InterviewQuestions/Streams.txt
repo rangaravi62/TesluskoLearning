@@ -228,9 +228,16 @@ forEach ->
 it is a terminal operation
 consumes the stream
 Executes the given action for every element.
-Does not return another Stream.
+Does not return another Stream. returns void
 Once forEach() is executed, the stream is consumed and cannot be reused.
 
 peek() ->
+It is an Intermediate Operation
+Inspect elements, mainly debugging
+Returns Stream<T>
+Doesn't affect the original Stream
+
+
+
 
 

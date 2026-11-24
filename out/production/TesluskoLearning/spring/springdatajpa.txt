@@ -2,6 +2,32 @@
 My Notes
 ------------------------------------------------------------------------------
 
+---------------------------------------------------------------
+Spring MVC Workflow
+---------------------------------------------------------------
+
+1. Front Controller (FC) will receive HTTP request.
+
+2. Dispatcher Servlet is a predefined class available in the Spring MVC module, acting as a Front Controller.
+
+3. DS will forward the request URL to Handler Mapper.
+
+4. Handler Mapper will identify which controller handles the request, and this information will be given back to FC.
+
+5. Now the FC will forward the request to the Controller.
+
+6. Controller will process the request and will return Model and View objects to FC.
+- Model → Data
+- View → Logical file name
+7. DS/FS will take the help of View Resolver to identify the extension and view file location. Then these details will be given back to DS.
+
+8. Now DS will send model data and view information to the View Component.
+
+9. Now model data will be rendered in the View file and given back to DS.
+
+10. DS will now send the response to the client in an understandable format.
+
+
 ----------------
 Spring + JDBC
 ----------------

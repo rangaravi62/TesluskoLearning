@@ -305,6 +305,8 @@ collect(Collectors.joining())
 
 collect(Collectors.groupingBy())
 
+collect(Collectors.partitioningBy())
+
 collect(Collectors.summingInt(x->x.id))
 
 collect(Collectors.averagingInt(x->x.id))
@@ -312,6 +314,42 @@ collect(Collectors.averagingInt(x->x.id))
 collect(Collectors.averagingDouble(p->p.price))
 
 collect(Collectors.counting())
+
+collect(Collectors.maxBy(Comparator.comparingInt(Employee::salary)))
+
+collect(Collectors.minBy(Comparator.comparingInt(Employee::salary)))
+
+Collectors.mapping(mapper, downstreamCollector) → transforms each element before collecting.
+
+Ex :
+
+Example: Group employees by department, but collect only their names.
+
+Map<String, List<String>> result = employees.stream()
+        .collect(Collectors.groupingBy(
+                Employee::getDepartment,
+                Collectors.mapping(
+                        Employee::getName,
+                        Collectors.toList()
+                )
+        ));
+
+
+
+Collectors.collectingAndThen(downstreamCollector, finisher) → transforms the final result after collecting.
+
+Example: Find the highest-paid employee in each department and return only their name.
+
+Map<String, String> result = employees.stream()
+        .collect(Collectors.groupingBy(
+                Employee::getDepartment,
+                Collectors.collectingAndThen(
+                        Collectors.maxBy(
+                                Comparator.comparingDouble(Employee::getSalary)
+                        ),
+                        emp -> emp.map(Employee::getName).orElse(null)
+                )
+        ));
 
 
 -----------------------------------------------------

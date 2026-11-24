@@ -15,7 +15,7 @@ Threads are used to perform multiple tasks simultaneously. They can be created b
 Java provides built-in support for multithreading through the java.lang.Thread class and the java.lang.Runnable interface.
 Thread class extends the Object class and implements the Runnable interface.
 
------------------------------
+------------------------------
 Thread States
 -----------------------------
 

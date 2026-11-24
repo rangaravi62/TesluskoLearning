@@ -77,7 +77,7 @@ Suppose Inventory Service receives ORD150 offset = 10
 
 Now Inventory Consumer reads ORD150, updates the database(stock from 10 to 8) and commits offset 11
 
-But here the fai5. How do we handle duplicate processing?lures can happen in between
+But here the failures can happen in between. How do we handle duplicate processing?
 
 Scenario 1 ---> Process First, Commit Later
 --------------------------------------------
@@ -415,7 +415,7 @@ Consumer reading a message does not remove it.
 KRaft vs ZooKeeper
 -------------------------------
 
-Older Kafka used: ZooKeeper for cluster metadata and controller coordination.
+Older Kafka used: ZooKeeper for cluster metadata and cluster coordination.
 
 Modern Kafka uses: KRaft Kafka's own consensus mechanism.
 

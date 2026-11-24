@@ -649,6 +649,11 @@ Implicit conversion may affect index usage and adds processing.
 
 
 
+-------------------------------------------------------
+Normalization
+-------------------------------------------------------
+
+
 
 
 

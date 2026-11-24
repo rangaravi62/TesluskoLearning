@@ -341,3 +341,17 @@ It is sorted in natural order of keys.
 O(log n) time complexity for insertion, deletion and retrieval operations.
 
 
+----------------------------------------------------------------------------------------------
+HashMap                                 vs                              Hashtable
+----------------------------------------------------------------------------------------------
+
+Feature	                            HashMap	                                                Hashtable
+Thread safety	                    Not synchronized	                                    Synchronized
+Performance	                        Generally faster	                                    Generally slower
+Null key	                        Allows one null key	                                    Does not allow null keys
+Null values                     	Allows multiple null values	                            Does not allow null values
+Introduction	                    Java 1.2	                                            Java 1.0
+Legacy class	                    No	                                                    Yes
+Iteration	                        Iterator (fail-fast)	                                Enumerator (not fail-fast), also supports Iterator
+Inheritance	                        Extends AbstractMap	                                    Extends Dictionary
+
